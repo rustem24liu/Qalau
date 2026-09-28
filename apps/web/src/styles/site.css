@@ -1,0 +1,26 @@
+/* Construction site: scene, timer, progress */
+.site { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: grid; gap: 12px; }
+
+.sky { position: relative; aspect-ratio: 4/3; max-width: 100%; border-radius: 12px; overflow: hidden; background: var(--stars), linear-gradient(180deg, var(--sky1), var(--sky2)); }
+.sky::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #2E3B63 0%, #7B5B7E 45%, #D98B6A 80%, #F2B67C 100%); opacity: 0; transition: opacity 1.6s ease; }
+.sky.dusk::before { opacity: 1; }
+.scene-host { position: absolute; inset: 0; }
+.scene-host canvas { position: relative; display: block; width: 100%; height: 100%; touch-action: pan-y; cursor: grab; }
+.scene-host canvas:active { cursor: grabbing; }
+.rot-hint { position: absolute; left: 10px; bottom: 10px; font-size: 12px; color: var(--ink); background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 4px 9px; border-radius: 99px; pointer-events: none; backdrop-filter: blur(4px); }
+.type-badge { position: absolute; right: 10px; top: 10px; font-size: 12px; font-weight: 600; color: var(--ink); background: color-mix(in srgb, var(--panel) 82%, transparent); padding: 4px 10px; border-radius: 99px; pointer-events: none; backdrop-filter: blur(4px); }
+.sky.dusk .rot-hint, .sky.dusk .type-badge { color: #1E2830; background: rgba(255, 245, 230, .82); }
+.toast { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13.5px; padding: 8px 14px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0, 0, 0, .18); max-width: calc(100% - 24px); text-align: center; }
+
+.meter { display: grid; gap: 6px; padding-inline: 4px; }
+.meter-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.stage { font: 700 15px/1.2 "Unbounded", sans-serif; }
+.count { font: 500 13px/1 "JetBrains Mono", monospace; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .6s ease; }
+.stages { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0 4px 4px; list-style: none; }
+.stages li { font-size: 12px; padding: 3px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.stages li.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.stages li.now { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } .sky::before { transition: none; } }
