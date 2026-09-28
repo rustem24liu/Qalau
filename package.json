@@ -12,9 +12,6 @@
     "preview": "npm run preview -w @qalau/web",
     "typecheck": "tsc -p apps/web --noEmit"
   },
-  "devDependencies": {
-    "typescript": "^5.6.3"
-  },
   "engines": {
     "node": ">=20"
   }
