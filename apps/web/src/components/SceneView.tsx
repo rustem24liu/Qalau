@@ -2,6 +2,7 @@ import { KINDS, type Goal } from "@qalau/core";
 import { useEffect, useRef } from "react";
 import { scene } from "../lib/scene";
 import { Toast } from "./Toast";
+import { WeatherFx, WeatherSky } from "./Weather";
 
 interface Props {
   goal: Goal;
@@ -23,7 +24,9 @@ export function SceneView({ goal, k, N, night, working }: Props) {
   const dusk = k >= N && !night;
   return (
     <div className={"sky" + (dusk ? " dusk" : "")}>
+      <WeatherSky />
       <div ref={host} className="scene-host" />
+      <WeatherFx />
       <span className="type-badge">{KINDS[goal.type].house}</span>
       {scene.is3D && <span className="rot-hint">Потяните, чтобы повернуть</span>}
       <Toast />

@@ -5,11 +5,13 @@ import { Street } from "./components/Street";
 import { useDailyRollover } from "./hooks/useDailyRollover";
 import { useTheme } from "./hooks/useTheme";
 import { useTimerTick } from "./hooks/useTimerTick";
+import { useWeatherSync } from "./hooks/useWeatherSync";
 
 export function App() {
   const { night, toggle } = useTheme();
   useTimerTick();
   useDailyRollover();
+  useWeatherSync();
 
   return (
     <div className="wrap">

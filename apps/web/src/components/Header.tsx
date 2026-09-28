@@ -1,4 +1,5 @@
 import { MoonIcon, SunIcon } from "./icons";
+import { SettingsMenu } from "./SettingsMenu";
 
 interface Props {
   night: boolean;
@@ -26,6 +27,7 @@ export function Header({ night, onToggleTheme }: Props) {
             <span className="ic">{night ? <MoonIcon /> : <SunIcon />}</span>
             <span>{night ? "Ночь" : "День"}</span>
           </button>
+          <SettingsMenu />
         </div>
       </header>
       <div className="tape" aria-hidden="true" />

@@ -3,6 +3,8 @@
   --bg: #EEF1F3; --panel: #FFFFFF; --ink: #1E2830; --muted: #5F6B74; --line: #D5DBE0;
   --sky1: #CFE3EF; --sky2: #F4F0E8;
   --stars: linear-gradient(transparent, transparent);
+  /* moon and stars: the night theme, and the real night sky from the weather layer */
+  --night-stars: radial-gradient(circle at 84% 17%, #F3EBCF 0 15px, rgba(243,235,207,.16) 16px 34px, transparent 35px), radial-gradient(1.4px 1.4px at 12% 14%, #fff 60%, transparent 62%), radial-gradient(1.2px 1.2px at 27% 31%, #fffb 60%, transparent 62%), radial-gradient(1.6px 1.6px at 44% 9%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 61% 24%, #fffa 60%, transparent 62%), radial-gradient(1.3px 1.3px at 71% 7%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 93% 36%, #fffa 60%, transparent 62%), radial-gradient(1.2px 1.2px at 6% 42%, #fff9 60%, transparent 62%), radial-gradient(1.4px 1.4px at 35% 18%, #fffc 60%, transparent 62%), radial-gradient(1px 1px at 55% 38%, #fff9 60%, transparent 62%);
   --brick: #B4553A; --brick2: #A24B33; --found: #7C7F82;
   --roof: #3E4A57; --roof2: #34404C; --glass: #BFD6E4; --frame: #F4F1EA; --door: #6B4A34;
   --grass: #8DB26B; --grass2: #7AA05A; --leaf: #5E8C47; --trunk: #6E5139; --smoke: #C9CFD4;
@@ -16,7 +18,7 @@
   :root:not([data-theme="light"]) {
     --bg: #10151B; --panel: #19212A; --ink: #E4E8EB; --muted: #98A4AD; --line: #2C3740;
     --sky1: #0E1630; --sky2: #27304A;
-    --stars: radial-gradient(circle at 84% 17%, #F3EBCF 0 15px, rgba(243,235,207,.16) 16px 34px, transparent 35px), radial-gradient(1.4px 1.4px at 12% 14%, #fff 60%, transparent 62%), radial-gradient(1.2px 1.2px at 27% 31%, #fffb 60%, transparent 62%), radial-gradient(1.6px 1.6px at 44% 9%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 61% 24%, #fffa 60%, transparent 62%), radial-gradient(1.3px 1.3px at 71% 7%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 93% 36%, #fffa 60%, transparent 62%), radial-gradient(1.2px 1.2px at 6% 42%, #fff9 60%, transparent 62%), radial-gradient(1.4px 1.4px at 35% 18%, #fffc 60%, transparent 62%), radial-gradient(1px 1px at 55% 38%, #fff9 60%, transparent 62%);
+    --stars: var(--night-stars);
     --brick: #C0634A; --brick2: #AC5741; --found: #6A6F74;
     --roof: #56687A; --roof2: #4B5C6D; --glass: #F2C14E; --frame: #C9CFD4; --door: #8A6448;
     --grass: #4F7A3C; --grass2: #456B34; --leaf: #5C8F45; --trunk: #7A5B40; --smoke: #56616B;
@@ -28,7 +30,7 @@
 :root[data-theme="dark"] {
   --bg: #10151B; --panel: #19212A; --ink: #E4E8EB; --muted: #98A4AD; --line: #2C3740;
   --sky1: #0E1630; --sky2: #27304A;
-  --stars: radial-gradient(circle at 84% 17%, #F3EBCF 0 15px, rgba(243,235,207,.16) 16px 34px, transparent 35px), radial-gradient(1.4px 1.4px at 12% 14%, #fff 60%, transparent 62%), radial-gradient(1.2px 1.2px at 27% 31%, #fffb 60%, transparent 62%), radial-gradient(1.6px 1.6px at 44% 9%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 61% 24%, #fffa 60%, transparent 62%), radial-gradient(1.3px 1.3px at 71% 7%, #fff 60%, transparent 62%), radial-gradient(1.1px 1.1px at 93% 36%, #fffa 60%, transparent 62%), radial-gradient(1.2px 1.2px at 6% 42%, #fff9 60%, transparent 62%), radial-gradient(1.4px 1.4px at 35% 18%, #fffc 60%, transparent 62%), radial-gradient(1px 1px at 55% 38%, #fff9 60%, transparent 62%);
+  --stars: var(--night-stars);
   --brick: #C0634A; --brick2: #AC5741; --found: #6A6F74;
   --roof: #56687A; --roof2: #4B5C6D; --glass: #F2C14E; --frame: #C9CFD4; --door: #8A6448;
   --grass: #4F7A3C; --grass2: #456B34; --leaf: #5C8F45; --trunk: #7A5B40; --smoke: #56616B;
