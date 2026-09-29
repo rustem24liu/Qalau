@@ -1,0 +1,23 @@
+/* Builder's speech cloud, anchored above his head (left/top set from JS) */
+.bubble {
+  position: absolute; left: 30%; top: 55%; z-index: 3;
+  transform: translate(-50%, calc(-100% - 14px));
+  width: max-content; max-width: min(260px, 70%);
+  background: #FFFFFF; color: #1E2830;
+  border-radius: 18px; padding: 10px 14px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .2);
+  font-size: 13.5px; line-height: 1.35;
+  animation: bubble-in .35s cubic-bezier(.2, .9, .3, 1.3) both;
+}
+/* cloud tail: two puffs trailing down to the head */
+.bubble::before, .bubble::after { content: ""; position: absolute; background: #FFFFFF; border-radius: 50%; box-shadow: 0 3px 8px rgba(0, 0, 0, .15); }
+.bubble::before { width: 14px; height: 14px; left: calc(50% - 4px); bottom: -12px; }
+.bubble::after { width: 8px; height: 8px; left: calc(50% + 4px); bottom: -22px; }
+.bubble p { margin: 0; }
+.bubble small { font-size: .8em; }
+.bubble.rest, .bubble.cheer { padding: 7px 12px; font-weight: 600; }
+.bubble-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.bubble-btns .btn { padding: 7px 11px; font-size: 13px; }
+.bubble-btns .btn.ghost { color: #5F6B74; border-color: #D5DBE0; }
+@keyframes bubble-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 4px)) scale(.8); } }
+@media (prefers-reduced-motion: reduce) { .bubble { animation: none; } }

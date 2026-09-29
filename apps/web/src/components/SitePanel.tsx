@@ -1,25 +1,37 @@
+import { isTired, runningTimers } from "@qalau/core";
 import { useLiveProgress } from "../hooks/useLiveProgress";
 import { useDayPhase } from "../hooks/useWeatherSync";
 import { useActiveGoal, useStore } from "../store";
+import { useCheer, type BubbleMode } from "./BuilderBubble";
 import { ProgressMeter } from "./ProgressMeter";
+import { RestBox } from "./RestBox";
 import { SceneView } from "./SceneView";
 import { TimerBox } from "./TimerBox";
 
 /** Left column: the construction site. */
 export function SitePanel({ night }: { night: boolean }) {
   const goal = useActiveGoal();
-  const timer = useStore(s => s.state.timer);
+  const timers = useStore(s => s.state.timers);
+  const rest = useStore(s => s.state.rest);
+  const tired = useStore(s => isTired(s.state, s.now));
+  const cheer = useCheer();
+  const mood: BubbleMode = rest ? "rest" : tired ? "tired" : cheer ? "cheer" : null;
   const { N, k } = useLiveProgress(goal);
   const phase = useDayPhase();
-  const working = !!timer && timer.goalId === goal.id && timer.paused == null;
+  const workers = runningTimers(timers, goal.id).length;
   // after dark at the user's location the site is lit for night, whatever the theme
   const dark = night || phase === "night";
 
   return (
     <div className="site">
-      <SceneView goal={goal} k={k} N={N} night={dark} working={working} />
-      {timer && <TimerBox key={timer.taskId} timer={timer} activeGoal={goal} />}
-      <ProgressMeter goal={goal} k={k} N={N} timer={timer} />
+      <SceneView goal={goal} k={k} N={N} night={dark} workers={workers} mood={mood} />
+      {rest && <RestBox rest={rest} />}
+      {timers.length > 0 && (
+        <div className={"timers" + (timers.length > 1 ? " multi" : "")}>
+          {timers.map(tm => <TimerBox key={tm.taskId} timer={tm} activeGoal={goal} />)}
+        </div>
+      )}
+      <ProgressMeter goal={goal} k={k} N={N} timers={timers} />
     </div>
   );
 }

@@ -1,23 +1,26 @@
-import { FINAL_STAGE, STAGES, type Goal, type Timer } from "@qalau/core";
+import { FINAL_STAGE, runningTimers, STAGES, type Goal, type Timer } from "@qalau/core";
 import { scene } from "../lib/scene";
+
+const CREW = ["", "Строим: ", "Строим вдвоём: ", "Строим втроём: "];
 
 interface Props {
   goal: Goal;
   k: number;
   N: number;
-  timer: Timer | null | undefined;
+  timers: Timer[];
 }
 
 /** Stage title, counters, progress bar and the list of stages. */
-export function ProgressMeter({ goal: g, k, N, timer }: Props) {
+export function ProgressMeter({ goal: g, k, N, timers }: Props) {
   const done = g.tasks.filter(t => t.done).length;
   const finished = k >= N;
   const cur = finished ? FINAL_STAGE : scene.stageOf(g.type, k);
-  const here = timer?.goalId === g.id;
+  const here = timers.filter(tm => tm.goalId === g.id);
+  const crew = runningTimers(here).length;
 
   const title = finished
     ? g.type === "daily" ? "Хижина готова на сегодня" : "Построено! С новосельем"
-    : (here ? (timer.paused != null ? "Стройка на паузе · " : "Строим: ") : "Этап: ") + STAGES[cur];
+    : (here.length ? (crew ? CREW[Math.min(crew, 3)] : "Стройка на паузе · ") : "Этап: ") + STAGES[cur];
 
   return (
     <>

@@ -81,6 +81,8 @@ export function createScene2D(): SceneApi {
     },
     thumb: (_t, k) => ({ kind: "svg", markup: svg(k, k, false) }),
     setNight() {},
-    setWorking() {},
+    setWorkers() {},
+    setMood() {},
+    headAnchor: () => null,
   };
 }

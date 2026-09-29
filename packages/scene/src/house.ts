@@ -22,6 +22,8 @@ export interface House {
   doorPiece: Piece;
   warmPos: THREE.Vector3;
   dims: { hx: number; hz: number; IX: number; IZ: number };
+  /** Builder's bed: he walks to `foot`, then lies down toward -z at height `top`. */
+  bed: { foot: THREE.Vector3; top: number };
   /** Where the builder waits, and the control console he presses. */
   idle: THREE.Vector3;
   cpos: THREE.Vector3;
@@ -177,6 +179,23 @@ export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materi
   fin.push(box(0.12, 1.8, 0.12, mat.ridge, lx, 0.9, lz), box(0.32, 0.32, 0.32, mat.lamp, lx, 1.95, lz));
   piece(6, ...fin);
 
+  // ---- builder's camp (static): bed and nightstand right of the house (the side facing the camera) ----
+  const bedX = hx + 2.4, bedL = 2.3, bedW = 1.15, legH = 0.3, matTop = legH + 0.32;
+  const camp = new THREE.Group();
+  camp.add(box(bedW, 0.14, bedL, mat.wood2, bedX, legH, 0));                       // frame
+  ([[-1, -1], [1, -1], [-1, 1], [1, 1]] as const).forEach(([sx, sz]) =>
+    camp.add(box(0.12, legH, 0.12, mat.wood2, bedX + sx * (bedW / 2 - 0.08), legH / 2, sz * (bedL / 2 - 0.08))));
+  camp.add(box(bedW + 0.04, 0.7, 0.14, mat.wood, bedX, legH + 0.3, -bedL / 2));   // headboard
+  camp.add(box(bedW - 0.1, 0.18, bedL - 0.12, mat.frame, bedX, matTop - 0.09, 0)); // mattress
+  camp.add(box(0.7, 0.14, 0.4, mat.plaster, bedX, matTop + 0.06, -bedL / 2 + 0.36)); // pillow
+  camp.add(box(bedW - 0.04, 0.08, bedL * 0.58, mat.teal2, bedX, matTop + 0.02, bedL / 2 - bedL * 0.29)); // blanket
+  const nsX = bedX + bedW / 2 + 0.45, nsZ = -bedL / 2 + 0.35; // outer side, clear of the path round the house
+  camp.add(box(0.5, 0.5, 0.5, mat.wood, nsX, 0.25, nsZ));                          // nightstand
+  camp.add(box(0.1, 0.22, 0.1, mat.ridge, nsX, 0.61, nsZ));
+  camp.add(box(0.26, 0.2, 0.26, mat.lamp, nsX, 0.8, nsZ));                         // glows at night
+  camp.add(box(bedW + 0.7, 0.03, 1.1, mat.fl2, bedX, 0.015, bedL / 2 + 0.55));      // rug at the foot
+  grp.add(camp);
+
   // ---- control console (static): the builder presses its button when tasks are ticked off ----
   const idle = new THREE.Vector3(dr.c - dr.w / 2 - 1.7, 0, Math.min(hz + 2.0, IZ - 1.1));
   const cpos = new THREE.Vector3(idle.x + 0.46, 0, idle.z + 0.42);
@@ -201,6 +220,7 @@ export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materi
     puffs, doorPiece,
     warmPos: new THREE.Vector3(dr.c, y0 + 1.8, hz + 1.1),
     dims: { hx, hz, IX, IZ },
+    bed: { foot: new THREE.Vector3(bedX, 0, bedL / 2 - 0.05), top: matTop },
     idle, cpos, btn, btnY: 0.7,
   };
 }

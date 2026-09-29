@@ -5,5 +5,6 @@ export * from "./date";
 export * from "./goals";
 export * from "./timer";
 export * from "./progress";
+export * from "./rest";
 export * from "./storage";
 export * from "./weather";

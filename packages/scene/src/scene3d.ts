@@ -41,12 +41,24 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
   const light = createLighting(scene, mat, bpMat);
   const CFG = houseConfigs(mat);
   const B = Object.fromEntries(GOAL_TYPES.map(t => [t, buildHouse(world, CFG[t], mat, bpMat, prim)])) as Record<GoalType, House>;
-  const builder = new Builder(mat, prim);
-  world.add(builder.group);
+  // builder 0 is always on site; the others show up only while their timers run
+  const VESTS = [mat.vest, mat.vestBlue, mat.vestGreen];
+  const builders: Builder[] = [];
+  const addBuilder = () => {
+    const b = new Builder(mat, prim, VESTS[builders.length % VESTS.length]);
+    b.group.visible = builders.length === 0; // extras stay hidden until setWorkers places them
+    builders.push(b);
+    world.add(b.group);
+    return b;
+  };
+  addBuilder();
+  /** How far apart (in pieces) the builders work, and where extra ones appear. */
+  const SPREAD = 9, SPAWN_DX = 0.9;
 
   let curType: GoalType | null = null, curGoal: string | null = null;
   let W0 = 1, H0 = 1, needs = true;
-  let working = false, nextIdx = 0;
+  let workers = 0, nextIdx = 0;
+  const head = new THREE.Vector3();
   const cur = () => (curType ? B[curType] : undefined);
 
   // ---- camera ----
@@ -106,7 +118,11 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
     }
     if (envChanged || busy) { light.apply(dusk, night, h); active = true; }
     if (!drag && Math.abs(vel) > 0.0004) { world.rotation.y += vel; vel *= 0.93; active = true; }
-    if (builder.update(t, h, { working, nextIdx, busy, finale: duskT === 1 && !reduced })) active = true;
+    builders.forEach((b, j) => {
+      if (j > 0 && !b.group.visible) return;
+      const f = { working: j < workers, nextIdx, offset: j * SPREAD, main: j === 0, busy, finale: duskT === 1 && !reduced };
+      if (b.update(t, h, f)) active = true;
+    });
     if (h.puffs.length && h.puffs[0].parent?.visible && !reduced) {
       h.puffs.forEach((p, i) => {
         const base = p.userData.base as THREE.Vector3, ph = t / 1400 + i * 1.3;
@@ -139,7 +155,8 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       GOAL_TYPES.forEach(t => { B[t].grp.visible = t === type; });
       h.pieces.forEach((p, i) => { p.obj.visible = i < k; p.obj.position.y = 0; });
       world.rotation.y = 0;
-      builder.group.visible = false;
+      const shown = builders.map(b => b.group.visible);
+      builders.forEach(b => { b.group.visible = false; });
       light.apply(k >= h.N ? 1 : 0, nightOn ? 1 : 0, h);
       fit(type, THUMB_W, THUMB_H);
       thumbRenderer.render(scene, cam);
@@ -148,7 +165,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       h.pieces.forEach((p, i) => { p.obj.visible = saved[i][0]; p.obj.position.y = saved[i][1]; });
       vis.forEach(([t, v]) => { B[t].grp.visible = v; });
       world.rotation.y = rot;
-      builder.group.visible = true;
+      builders.forEach((b, j) => { b.group.visible = shown[j]; });
       if (curType) fit(curType, W0, H0);
       light.apply(dusk, night, cur());
       needs = true;
@@ -195,7 +212,8 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
         curType = type;
         fit(type, W0, H0);
       }
-      builder.placeAt(h);
+      builders[0].placeAt(h);
+      builders.slice(1).forEach((b, j) => b.placeAt(h, SPAWN_DX * (j + 1)));
       nextIdx = Math.min(k, h.N - 1);
       curGoal = goalId;
       const now = performance.now();
@@ -224,8 +242,31 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       needs = true;
     },
 
-    setWorking(on) {
-      if (working !== on) { working = on; needs = true; }
+    setWorkers(n) {
+      if (n === workers) return;
+      while (builders.length < n) addBuilder();
+      const h = cur();
+      builders.forEach((b, j) => {
+        if (j === 0) return;
+        const on = j < n;
+        if (on && !b.group.visible && h) b.placeAt(h, SPAWN_DX * j, true); // arrive from the console
+        b.group.visible = on;
+      });
+      workers = n;
+      needs = true;
+    },
+
+    setMood(mood) {
+      if (builders[0].mood !== mood) { builders[0].mood = mood; needs = true; }
+    },
+
+    headAnchor() {
+      const g = builders[0].group;
+      if (!curType || !g.visible) return null;
+      g.updateWorldMatrix(true, false);
+      head.set(0, 1.45, 0);
+      g.localToWorld(head).project(cam);
+      return { x: (head.x + 1) / 2, y: (1 - head.y) / 2 };
     },
 
     thumb,

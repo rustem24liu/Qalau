@@ -10,6 +10,7 @@
   --grass: #8DB26B; --grass2: #7AA05A; --leaf: #5E8C47; --trunk: #6E5139; --smoke: #C9CFD4;
   --light: #F4C75B; --accent: #E3A12F; --accent-ink: #2A1E05; --blueprint: #9AAFC0;
   --focus: #2F6FA3;
+  --prio-high: #C8402E; --prio-medium: #C98A12; --prio-low: #3D7FB8;
   color-scheme: light;
 }
 
@@ -24,6 +25,7 @@
     --grass: #4F7A3C; --grass2: #456B34; --leaf: #5C8F45; --trunk: #7A5B40; --smoke: #56616B;
     --light: #F2C14E; --accent: #EBAE45; --accent-ink: #1E1503; --blueprint: #4A6377;
     --focus: #7FB3DE;
+    --prio-high: #F07261; --prio-medium: #EBB44F; --prio-low: #7FB3DE;
     color-scheme: dark;
   }
 }
@@ -36,5 +38,6 @@
   --grass: #4F7A3C; --grass2: #456B34; --leaf: #5C8F45; --trunk: #7A5B40; --smoke: #56616B;
   --light: #F2C14E; --accent: #EBAE45; --accent-ink: #1E1503; --blueprint: #4A6377;
   --focus: #7FB3DE;
+  --prio-high: #F07261; --prio-medium: #EBB44F; --prio-low: #7FB3DE;
   color-scheme: dark;
 }

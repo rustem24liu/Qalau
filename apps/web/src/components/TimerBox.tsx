@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ensureAudio } from "../lib/audio";
 import { useStore } from "../store";
 
-/** Running stopwatch / countdown with pause, finish and cancel. */
+/** One running stopwatch / countdown with pause, finish and cancel. */
 export function TimerBox({ timer: tm, activeGoal }: { timer: Timer; activeGoal: Goal }) {
   const goals = useStore(s => s.state.goals);
   const now = useStore(s => s.now);
@@ -33,13 +33,13 @@ export function TimerBox({ timer: tm, activeGoal }: { timer: Timer; activeGoal: 
       {confirmStop ? (
         <div className="tm-btns">
           <span className="note">Кирпичи этой задачи разберут, время не сохранится. Точно?</span>
-          <button className="btn warn" type="button" onClick={cancelTimer}>Остановить</button>
+          <button className="btn warn" type="button" onClick={() => cancelTimer(tm.taskId)}>Остановить</button>
           <button className="btn ghost" type="button" onClick={() => setConfirmStop(false)}>Продолжить стройку</button>
         </div>
       ) : (
         <div className="tm-btns">
-          <button className="btn ghost" type="button" onClick={togglePause}>{tm.paused != null ? "Продолжить" : "Пауза"}</button>
-          <button className="btn" type="button" onClick={() => { ensureAudio(); finishTimer(true); }}>{up ? "Готово" : "Готово раньше"}</button>
+          <button className="btn ghost" type="button" onClick={() => togglePause(tm.taskId)}>{tm.paused != null ? "Продолжить" : "Пауза"}</button>
+          <button className="btn" type="button" onClick={() => { ensureAudio(); finishTimer(tm.taskId, true); }}>{up ? "Готово" : "Готово раньше"}</button>
           <button className="btn ghost" type="button" onClick={() => setConfirmStop(true)}>{up ? "Отменить" : "Остановить"}</button>
         </div>
       )}

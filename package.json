@@ -10,9 +10,14 @@
     "dev": "npm run dev -w @qalau/web",
     "build": "npm run build -w @qalau/web",
     "preview": "npm run preview -w @qalau/web",
-    "typecheck": "tsc -p apps/web --noEmit"
+    "typecheck": "tsc -p packages/core && tsc -p packages/scene && tsc -p apps/web",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.7"
   }
 }

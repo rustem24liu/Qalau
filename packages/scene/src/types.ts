@@ -1,4 +1,7 @@
 import type { GoalType } from "@qalau/core";
+import type { Mood } from "./builder";
+
+export type { Mood };
 
 export type Thumb = { kind: "img"; src: string } | { kind: "svg"; markup: string };
 
@@ -16,8 +19,12 @@ export interface SceneApi {
   /** Shows goal `goalId` with the first k pieces built (animates growth within the same goal). */
   show(goalId: string, type: GoalType, k: number): void;
   setNight(on: boolean): void;
-  /** Builder walks to the pieces and hammers while a timer runs. */
-  setWorking(on: boolean): void;
+  /** Number of builders hammering — one per running timer. The main builder idles at 0. */
+  setWorkers(n: number): void;
+  /** Main builder's state: tired after long work, resting on a break, cheering after it. */
+  setMood(mood: Mood): void;
+  /** Main builder's head in host coordinates (0..1), for the speech bubble; null if unknown. */
+  headAnchor(): { x: number; y: number } | null;
   /** Static preview for the goal list, lit for day or night. */
   thumb(type: GoalType, k: number, night: boolean): Thumb | null;
 }

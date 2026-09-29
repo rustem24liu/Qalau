@@ -12,6 +12,10 @@ export const timerProgress = (tm: Timer, now = Date.now()) =>
 export const isExpired = (tm: Timer, now = Date.now()) =>
   tm.mode === "down" && tm.paused == null && now - tm.start >= tm.dur;
 
+/** Timers still counting (not paused), optionally only for one goal. */
+export const runningTimers = (timers: Timer[], goalId?: string) =>
+  timers.filter(tm => tm.paused == null && (!goalId || tm.goalId === goalId));
+
 /** Pause or resume. Mutates. */
 export function togglePause(tm: Timer, now = Date.now()): void {
   if (tm.paused != null) {

@@ -28,5 +28,6 @@ Requires Node 20+.
 npm install
 npm run dev        # http://localhost:5173
 npm run typecheck
+npm test           # Vitest: core logic + scene geometry
 npm run build      # apps/web/dist
 ```

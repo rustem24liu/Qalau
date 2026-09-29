@@ -1,6 +1,7 @@
-import { isGoalType } from "./constants";
+import { isGoalType, isPriority, PRIORITIES } from "./constants";
+import { freshWork } from "./rest";
 import { today, yesterday } from "./date";
-import type { AppState, Goal, GoalType, Task } from "./types";
+import type { AppState, Goal, GoalType, Priority, Task } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -18,6 +19,8 @@ export function exampleState(): AppState {
   return {
     example: true,
     activeId: a,
+    timers: [],
+    work: freshWork(),
     goals: [
       {
         id: a, type: "big", title: "Запустить свой пет-проект", tasks: [
@@ -41,9 +44,13 @@ export function exampleState(): AppState {
 
 /** Repairs data loaded from storage. Mutates. */
 export function normalize(state: AppState): void {
+  if (!Array.isArray(state.timers)) state.timers = state.timer ? [state.timer] : [];
+  delete state.timer;
+  if (!state.work) state.work = freshWork();
   state.goals.forEach(g => {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];
+    g.tasks.forEach(t => { if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority; });
   });
   if (!state.goals.length) {
     const g = newGoal("big", "Новая цель");
@@ -74,10 +81,31 @@ export function rollDaily(state: AppState): boolean {
   return changed;
 }
 
+/** Moves a task to position `to` in its goal (order = priority). Mutates; ignores unknown ids. */
+export function moveTask(g: Goal, taskId: string, to: number): void {
+  const from = g.tasks.findIndex(t => t.id === taskId);
+  if (from < 0) return;
+  const [t] = g.tasks.splice(from, 1);
+  g.tasks.splice(Math.max(0, Math.min(to, g.tasks.length)), 0, t);
+}
+
+/** Sets or clears (null) a task's priority. Mutates. */
+export function setPriority(t: Task, p: Priority | null): void {
+  if (p) t.priority = p;
+  else delete t.priority;
+}
+
+const rank = (t: Task) => (t.done ? PRIORITIES.length + 1 : t.priority ? PRIORITIES.indexOf(t.priority) : PRIORITIES.length);
+
+/** Orders tasks: open ones by priority (high → none), finished ones last. Stable, so equal tasks keep their manual order. Mutates. */
+export function sortByPriority(g: Goal): void {
+  g.tasks = g.tasks.map((t, i) => [t, i] as const).sort(([a, i], [b, j]) => rank(a) - rank(b) || i - j).map(([t]) => t);
+}
+
 /** Checks/unchecks a task, stops its timer and counts daily streaks. Mutates. */
 export function markDone(state: AppState, g: Goal, t: Task, val: boolean): void {
   t.done = val;
-  if (state.timer && state.timer.taskId === t.id) state.timer = null;
+  state.timers = state.timers.filter(tm => tm.taskId !== t.id);
   if (g.type === "daily" && g.tasks.length && g.tasks.every(x => x.done) && g.lastBuilt !== today()) {
     g.streak = g.lastBuilt === yesterday() ? (g.streak || 0) + 1 : 1;
     g.built = (g.built || 0) + 1;

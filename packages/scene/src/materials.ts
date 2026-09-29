@@ -24,7 +24,7 @@ export function createMaterials() {
     conBtn: M(0xE0413A, { emissive: 0x8A1A12, emissiveIntensity: 0.25, roughness: 0.5 }),
     conLight: M(0x9BE36A, { emissive: 0x7DDC4A, emissiveIntensity: 0.2 }),
     // builder
-    skin: M(0xE7B58A), vest: M(0xEF8424), stripe: M(0xF6F2E4), pants: M(0x2F5B86),
+    skin: M(0xE7B58A), vest: M(0xEF8424), vestBlue: M(0x2F86D6), vestGreen: M(0x3E9E55), stripe: M(0xF6F2E4), pants: M(0x2F5B86),
     boot: M(0x3A302A), hat: M(0xF3C12C), eye: M(0x262626), handle: M(0x7A5534),
     steel: M(0x9AA0A8, { metalness: 0.5, roughness: 0.4 }),
   };

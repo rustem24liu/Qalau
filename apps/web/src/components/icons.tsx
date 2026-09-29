@@ -41,3 +41,17 @@ export const CloseIcon = () => (
     <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );
+
+export const GripIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+    <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+    <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
+  </svg>
+);
+
+export const FlagIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M5 21V4h1.8v.9C8 4.3 9.3 4 10.7 4c2.4 0 3.6 1.2 5.8 1.2 1 0 1.9-.2 2.7-.5v9.1c-.8.3-1.7.5-2.7.5-2.2 0-3.4-1.2-5.8-1.2-1.4 0-2.7.3-3.9.9V21z" />
+  </svg>
+);
