@@ -19,3 +19,11 @@
 .timer.rest { border-color: var(--leaf); background: color-mix(in srgb, var(--leaf) 10%, var(--bg)); }
 .timer.rest .tm-bar i { background: var(--leaf); }
 .tm-sub { font-size: 12.5px; color: var(--muted); }
+
+/* "take a break" */
+.site-actions { display: flex; justify-content: flex-end; margin-top: -4px; }
+.site-actions .btn.ghost:hover { color: var(--leaf); border-color: var(--leaf); }
+.rest-picker { border-color: var(--leaf); }
+.rest-picker .chip.on { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+.rest-picker .btn { margin-left: 0; }
+.rest-picker .btn:not(.ghost) { margin-left: auto; background: var(--leaf); color: #fff; }

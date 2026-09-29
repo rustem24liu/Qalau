@@ -1,5 +1,5 @@
 import {
-  activeGoal, elapsed, endRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, sortByPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
+  activeGoal, elapsed, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
   type AppState, type Goal, type GoalType, type Priority, type Timer,
 } from "@qalau/core";
 import { create } from "zustand";
@@ -36,11 +36,9 @@ interface Store {
 
   addTask(text: string): void;
   removeTask(id: string): void;
-  /** Reorders tasks of the active goal: put `id` at position `to`. */
+  /** Reorders tasks of the active goal: put `id` at position `to` (within its priority group — normalize re-sorts). */
   moveTask(id: string, to: number): void;
   setPriority(id: string, p: Priority | null): void;
-  /** Reorders the active goal's tasks by priority, finished ones last. */
-  sortByPriority(): void;
   toggleTask(id: string, done: boolean): void;
 
   /** Start a task in the active goal; ignored at MAX_PARALLEL or if it already runs. */
@@ -51,8 +49,9 @@ interface Store {
   /** Finish a running task. `early` = before the countdown ran out. */
   finishTimer(taskId: string, early: boolean): void;
 
-  /** Builder's break: pause everything for REST_FOR, then resume. */
-  startRest(): void;
+  /** Builder's break: pause everything for `minutes` (default REST_FOR), then resume. */
+  startRest(minutes?: number): void;
+  extendRest(minutes: number): void;
   endRest(): void;
   snoozeRest(): void;
 }
@@ -144,8 +143,6 @@ export const useStore = create<Store>()((set, get) => ({
     if (t) setPriority(t, p);
   })),
 
-  sortByPriority: () => get().update(withActive(g => sortByPriority(g))),
-
   toggleTask: (id, done) => get().update(withActive((g, s) => {
     const t = g.tasks.find(x => x.id === id);
     if (t) markDone(s, g, t, done);
@@ -181,7 +178,9 @@ export const useStore = create<Store>()((set, get) => ({
     chime();
   },
 
-  startRest: () => get().update(s => startRest(s)),
+  startRest: minutes => get().update(s => startRest(s, Date.now(), minutes ? minutes * 60000 : undefined)),
+
+  extendRest: minutes => get().update(s => extendRest(s, minutes * 60000)),
 
   endRest() {
     if (!get().state.rest) return;

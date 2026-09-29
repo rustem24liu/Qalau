@@ -17,7 +17,7 @@ export const newTask = (text: string): Task => ({ id: uid(), text, done: false }
 export function exampleState(): AppState {
   const t = (text: string, done: boolean): Task => ({ id: uid(), text, done });
   const a = uid();
-  return {
+  const state: AppState = {
     example: true,
     activeId: a,
     timers: [],
@@ -41,9 +41,14 @@ export function exampleState(): AppState {
       },
     ],
   };
+  state.goals.forEach(sortByPriority); // finished example tasks sit at the bottom, like real ones
+  return state;
 }
 
-/** Repairs data loaded from storage. Mutates. */
+/**
+ * Repairs data loaded from storage and keeps the task order invariant (see sortByPriority).
+ * Runs after every change, so checking a task off or setting a priority re-orders the list. Mutates.
+ */
 export function normalize(state: AppState): void {
   if (!Array.isArray(state.timers)) state.timers = state.timer ? [state.timer] : [];
   delete state.timer;
@@ -54,6 +59,7 @@ export function normalize(state: AppState): void {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];
     g.tasks.forEach(t => { if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority; });
+    sortByPriority(g);
   });
   if (!state.goals.length) {
     const g = newGoal("big", "Новая цель");
@@ -77,6 +83,7 @@ export function rollDaily(state: AppState): boolean {
     } else if (g.day !== t) {
       if (g.lastBuilt !== yesterday() && g.lastBuilt !== t) g.streak = 0;
       g.tasks.forEach(x => { x.done = false; });
+      sortByPriority(g); // yesterday's finished tasks come back into their priority groups
       g.day = t;
       changed = true;
     }
@@ -100,13 +107,18 @@ export function setPriority(t: Task, p: Priority | null): void {
 
 const rank = (t: Task) => (t.done ? PRIORITIES.length + 1 : t.priority ? PRIORITIES.indexOf(t.priority) : PRIORITIES.length);
 
-/** Orders tasks: open ones by priority (high → none), finished ones last. Stable, so equal tasks keep their manual order. Mutates. */
+/**
+ * The list invariant: open tasks by priority (high → none), finished ones last.
+ * Stable, so tasks within a group keep their manual (drag) order. Mutates.
+ */
 export function sortByPriority(g: Goal): void {
   g.tasks = g.tasks.map((t, i) => [t, i] as const).sort(([a, i], [b, j]) => rank(a) - rank(b) || i - j).map(([t]) => t);
 }
 
 /** Checks/unchecks a task, stops its timer and counts daily streaks. Mutates. */
 export function markDone(state: AppState, g: Goal, t: Task, val: boolean): void {
+  // a just-finished task goes to the very bottom (sorting is stable, so it stays last among done ones)
+  if (val && !t.done && g.tasks.includes(t)) g.tasks = [...g.tasks.filter(x => x !== t), t];
   t.done = val;
   state.timers = state.timers.filter(tm => tm.taskId !== t.id);
   if (g.type === "daily" && g.tasks.length && g.tasks.every(x => x.done) && g.lastBuilt !== today()) {

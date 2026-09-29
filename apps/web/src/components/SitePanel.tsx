@@ -5,6 +5,7 @@ import { useActiveGoal, useStore } from "../store";
 import { useCheer, type BubbleMode } from "./BuilderBubble";
 import { ProgressMeter } from "./ProgressMeter";
 import { RestBox } from "./RestBox";
+import { RestLauncher } from "./RestLauncher";
 import { SceneView } from "./SceneView";
 import { TimerBox } from "./TimerBox";
 
@@ -25,7 +26,7 @@ export function SitePanel({ night }: { night: boolean }) {
   return (
     <div className="site">
       <SceneView goal={goal} k={k} N={N} night={dark} workers={workers} mood={mood} />
-      {rest && <RestBox rest={rest} />}
+      {rest ? <RestBox rest={rest} /> : <RestLauncher />}
       {timers.length > 0 && (
         <div className={"timers" + (timers.length > 1 ? " multi" : "")}>
           {timers.map(tm => <TimerBox key={tm.taskId} timer={tm} activeGoal={goal} />)}

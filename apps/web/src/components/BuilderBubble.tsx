@@ -1,4 +1,4 @@
-import { fmtClock, REST_FOR, restLeft, TIRED_AFTER } from "@qalau/core";
+import { fmtClock, REST_FOR, REST_PRESETS, restLeft, TIRED_AFTER } from "@qalau/core";
 import { useEffect, useRef, useState } from "react";
 import { scene } from "../lib/scene";
 import { useStore } from "../store";
@@ -36,9 +36,11 @@ export function BuilderBubble({ mode }: { mode: BubbleMode }) {
     <div ref={el} className={"bubble " + mode} role={mode === "tired" ? "alertdialog" : "status"}>
       {mode === "tired" && (
         <>
-          <p>Уф, работаю уже {min(TIRED_AFTER)} минут без перерыва. Может, отдохнём {min(REST_FOR)} минут?</p>
+          <p>Уф, работаю уже {min(TIRED_AFTER)} минут без перерыва. Отдохнём?</p>
           <div className="bubble-btns">
-            <button className="btn" type="button" onClick={startRest}>Ок, отдыхаем</button>
+            {REST_PRESETS.slice(0, 3).map(m => (
+              <button key={m} className={"btn" + (m === min(REST_FOR) ? "" : " soft")} type="button" onClick={() => startRest(m)}>{m} мин</button>
+            ))}
             <button className="btn ghost" type="button" onClick={snoozeRest}>Позже</button>
           </div>
         </>

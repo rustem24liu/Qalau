@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { REST_FOR, SNOOZE_FOR, TIRED_AFTER } from "./constants";
-import { endRest, freshWork, isTired, restLeft, resumeTask, snoozeRest, startRest, syncWork, wake, workedMs } from "./rest";
+import { REST_FOR, REST_MAX, REST_MIN, SNOOZE_FOR, TIRED_AFTER } from "./constants";
+import { endRest, extendRest, freshWork, isTired, restLeft, resumeTask, snoozeRest, startRest, syncWork, wake, workedMs } from "./rest";
 import { togglePause } from "./timer";
 import type { AppState, Timer } from "./types";
 
@@ -150,5 +150,44 @@ describe("waking up", () => {
     const before = structuredClone(s);
     wake(s, t1);
     expect(s).toEqual(before);
+  });
+});
+
+describe("break length", () => {
+  const t1 = T0 + 20 * m;
+
+  it("takes a break of the chosen length at any time", () => {
+    const s = working();
+    expect(isTired(s, t1)).toBe(false);
+    startRest(s, t1, 25 * m);
+    expect(s.rest).toMatchObject({ dur: 25 * m, resume: ["a", "b"] });
+    expect(restLeft(s.rest!, t1 + 5 * m)).toBe(20 * m);
+  });
+
+  it("clamps silly lengths", () => {
+    const a = working(); startRest(a, t1, 0);
+    expect(a.rest!.dur).toBe(REST_FOR);
+    const b = working(); startRest(b, t1, 10);
+    expect(b.rest!.dur).toBe(REST_MIN);
+    const c = working(); startRest(c, t1, 999 * m);
+    expect(c.rest!.dur).toBe(REST_MAX);
+  });
+
+  it("ignores a second start, so paused tasks are not forgotten", () => {
+    const s = working();
+    startRest(s, t1, 5 * m);
+    startRest(s, t1 + m, 30 * m);
+    expect(s.rest).toMatchObject({ start: t1, dur: 5 * m, resume: ["a", "b"] });
+  });
+
+  it("extends the current break up to the maximum", () => {
+    const s = working();
+    extendRest(s, 5 * m); // not resting: nothing happens
+    expect(s.rest).toBeUndefined();
+    startRest(s, t1, 10 * m);
+    extendRest(s, 5 * m);
+    expect(s.rest!.dur).toBe(15 * m);
+    extendRest(s, 999 * m);
+    expect(s.rest!.dur).toBe(REST_MAX);
   });
 });

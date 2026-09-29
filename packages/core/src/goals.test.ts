@@ -108,25 +108,27 @@ describe("markDone", () => {
   it("builds today's hut and extends yesterday's streak", () => {
     const g = daily({ lastBuilt: YESTERDAY, streak: 2, built: 5 });
     const s = stateOf(g);
-    markDone(s, g, g.tasks[0], true);
+    const [a, b] = g.tasks;
+    markDone(s, g, a, true);
     expect(g.streak).toBe(2);
-    markDone(s, g, g.tasks[1], true);
+    markDone(s, g, b, true);
     expect(g).toMatchObject({ streak: 3, built: 6, lastBuilt: TODAY });
   });
 
   it("starts a new streak after a gap", () => {
     const g = daily({ lastBuilt: TWO_DAYS_AGO, streak: 7 });
     const s = stateOf(g);
-    g.tasks.forEach(t => markDone(s, g, t, true));
+    [...g.tasks].forEach(t => markDone(s, g, t, true));
     expect(g.streak).toBe(1);
   });
 
   it("counts a day only once when tasks are unchecked and checked again", () => {
     const g = daily();
     const s = stateOf(g);
-    g.tasks.forEach(t => markDone(s, g, t, true));
-    markDone(s, g, g.tasks[0], false);
-    markDone(s, g, g.tasks[0], true);
+    [...g.tasks].forEach(t => markDone(s, g, t, true));
+    const first = g.tasks[0];
+    markDone(s, g, first, false);
+    markDone(s, g, first, true);
     expect(g).toMatchObject({ streak: 1, built: 1 });
   });
 });
@@ -185,7 +187,50 @@ describe("priority", () => {
   it("normalize drops unknown priorities", () => {
     const s = stateOf({ ...newGoal("big", ""), tasks: [{ ...task("a"), priority: "urgent" as never }, task("b", "low")] });
     normalize(s);
-    expect("priority" in s.goals[0].tasks[0]).toBe(false);
-    expect(s.goals[0].tasks[1].priority).toBe("low");
+    const byId = (id: string) => s.goals[0].tasks.find(t => t.id === id)!;
+    expect("priority" in byId("a")).toBe(false);
+    expect(byId("b").priority).toBe("low");
+  });
+});
+
+describe("automatic task order", () => {
+  const task = (id: string, priority?: Priority, done = false): Task => ({ id, text: id, done, ...(priority && { priority }) });
+  const ids = (s: AppState) => s.goals[0].tasks.map(t => t.id).join(" ");
+  const setup = (...tasks: Task[]) => { const s = stateOf({ ...newGoal("big", ""), tasks }); normalize(s); return s; };
+
+  it("a checked task drops to the bottom, an unchecked one returns to its group", () => {
+    const s = setup(task("a"), task("b"), task("c"));
+    const g = s.goals[0];
+    markDone(s, g, g.tasks[0], true); normalize(s);
+    expect(ids(s)).toBe("b c a");
+    markDone(s, g, g.tasks[0], true); normalize(s);
+    expect(ids(s)).toBe("c a b"); // the newest finished task is the last one
+    markDone(s, g, g.tasks.find(t => t.id === "a")!, false); normalize(s);
+    expect(ids(s)).toBe("c a b"); // back among open tasks, at the end of its group
+  });
+
+  it("setting a priority lifts the task into its group", () => {
+    const s = setup(task("x", "high"), task("a"), task("b"), task("c"));
+    setPriority(s.goals[0].tasks[3], "high"); normalize(s);
+    expect(ids(s)).toBe("x c a b");
+    setPriority(s.goals[0].tasks[2], "low"); normalize(s);
+    expect(ids(s)).toBe("x c a b");
+    setPriority(s.goals[0].tasks[3], "medium"); normalize(s);
+    expect(ids(s)).toBe("x c b a");
+  });
+
+  it("dragging works inside a group and snaps back across groups", () => {
+    const s = setup(task("h1", "high"), task("h2", "high"), task("n1"), task("n2"));
+    moveTask(s.goals[0], "h2", 0); normalize(s);
+    expect(ids(s)).toBe("h2 h1 n1 n2");
+    moveTask(s.goals[0], "n2", 0); normalize(s);
+    expect(ids(s)).toBe("h2 h1 n2 n1"); // stays below the high ones, but first among its own group
+  });
+
+  it("a new day brings finished daily tasks back into order", () => {
+    const g: Goal = { ...daily({ day: YESTERDAY }), tasks: [task("n"), task("u", "high", true)] };
+    const s = stateOf(g);
+    rollDaily(s);
+    expect(ids(s)).toBe("u n");
   });
 });

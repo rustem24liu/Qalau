@@ -29,6 +29,10 @@ export const TIRED_AFTER = 50 * 60000;
 export const REST_FOR = 10 * 60000;
 /** "Later" asks again after this much more work. */
 export const SNOOZE_FOR = 10 * 60000;
+/** Break lengths offered in the UI, minutes; a custom one is clamped to REST_MIN..REST_MAX. */
+export const REST_PRESETS = [5, 10, 15, 30];
+export const REST_MIN = 1 * 60000;
+export const REST_MAX = 120 * 60000;
 
 export const GOAL_TYPES = Object.keys(KINDS) as GoalType[];
 

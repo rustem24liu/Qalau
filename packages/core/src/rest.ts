@@ -1,4 +1,4 @@
-import { REST_FOR, SNOOZE_FOR, TIRED_AFTER } from "./constants";
+import { REST_FOR, REST_MAX, REST_MIN, SNOOZE_FOR, TIRED_AFTER } from "./constants";
 import { runningTimers, togglePause } from "./timer";
 import type { AppState, Rest, WorkLog } from "./types";
 
@@ -27,12 +27,20 @@ export function syncWork(s: AppState, now = Date.now()): void {
 export const isTired = (s: AppState, now = Date.now()) =>
   !s.rest && s.work.from != null && workedMs(s.work, now) >= s.work.promptAt;
 
-/** Pauses every running task and starts a break. Mutates. */
-export function startRest(s: AppState, now = Date.now()): void {
+const clampRest = (ms: number) => Math.min(REST_MAX, Math.max(REST_MIN, Math.round(ms) || REST_FOR));
+
+/** Pauses every running task and starts a break of `dur` ms (clamped). No-op while already resting. Mutates. */
+export function startRest(s: AppState, now = Date.now(), dur = REST_FOR): void {
+  if (s.rest) return; // a second start would forget which tasks to resume
   const running = runningTimers(s.timers);
   running.forEach(tm => togglePause(tm, now));
-  s.rest = { start: now, dur: REST_FOR, resume: running.map(tm => tm.taskId) };
+  s.rest = { start: now, dur: clampRest(dur), resume: running.map(tm => tm.taskId) };
   syncWork(s, now);
+}
+
+/** Makes the current break longer (up to REST_MAX in total). Mutates. */
+export function extendRest(s: AppState, ms: number): void {
+  if (s.rest) s.rest.dur = Math.min(REST_MAX, s.rest.dur + ms);
 }
 
 /** Ends the break: fatigue resets and the paused tasks resume. Mutates. */

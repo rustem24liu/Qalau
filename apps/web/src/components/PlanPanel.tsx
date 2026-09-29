@@ -1,6 +1,6 @@
 import { fmtDur } from "@qalau/core";
 import { scene } from "../lib/scene";
-import { useActiveGoal, useStore } from "../store";
+import { useActiveGoal } from "../store";
 import { AddTaskForm } from "./AddTaskForm";
 import { GoalHeader } from "./GoalHeader";
 import { DailyNote, GoalTypeSwitch } from "./GoalTypeSwitch";
@@ -11,8 +11,6 @@ export function PlanPanel() {
   const goal = useActiveGoal();
   const N = scene.pieceCount(goal.type);
   const total = goal.tasks.length;
-  const sortByPriority = useStore(s => s.sortByPriority);
-  const canSort = total > 1 && goal.tasks.some(t => t.priority && !t.done);
   const spentAll = goal.tasks.reduce((a, t) => a + (t.spent || 0), 0);
   const hint =
     (total ? `Одна задача ≈ ${Math.round(N / total)} деталей · всего в постройке ${N} деталей` : `Добавьте первую задачу · в постройке ${N} деталей`) +
@@ -26,7 +24,6 @@ export function PlanPanel() {
       <div>
         <div className="tasks-head">
           <div className="lbl">Задачи — кирпичики</div>
-          {canSort && <button className="btn ghost sort-btn" type="button" onClick={sortByPriority}>↓ По приоритету</button>}
         </div>
         <TaskList key={goal.id} goal={goal} />
       </div>

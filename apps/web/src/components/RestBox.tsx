@@ -5,6 +5,7 @@ import { useStore } from "../store";
 export function RestBox({ rest }: { rest: Rest }) {
   const now = useStore(s => s.now);
   const endRest = useStore(s => s.endRest);
+  const extendRest = useStore(s => s.extendRest);
   const left = restLeft(rest, now);
   const n = rest.resume.length;
 
@@ -18,6 +19,7 @@ export function RestBox({ rest }: { rest: Rest }) {
       <div className="tm-time">{fmtClock(left)}</div>
       <div className="tm-bar"><i style={{ width: (1 - left / rest.dur) * 100 + "%" }} /></div>
       <div className="tm-btns">
+        <button className="btn ghost" type="button" onClick={() => extendRest(5)}>+5 мин</button>
         <button className="btn ghost" type="button" onClick={endRest}>Вернуться к работе</button>
       </div>
     </div>

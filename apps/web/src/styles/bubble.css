@@ -18,6 +18,7 @@
 .bubble.rest, .bubble.cheer { padding: 7px 12px; font-weight: 600; }
 .bubble-btns { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .bubble-btns .btn { padding: 7px 11px; font-size: 13px; }
+.bubble-btns .btn.soft { background: #F3E6C8; color: #2A1E05; }
 .bubble-btns .btn.ghost { color: #5F6B74; border-color: #D5DBE0; }
 @keyframes bubble-in { from { opacity: 0; transform: translate(-50%, calc(-100% - 4px)) scale(.8); } }
 @media (prefers-reduced-motion: reduce) { .bubble { animation: none; } }
