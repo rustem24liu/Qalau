@@ -12,6 +12,8 @@ export interface Task {
   priority?: Priority;
   /** Missing means "M". */
   size?: TaskSize;
+  /** Deadline, YYYY-MM-DD. */
+  due?: string;
   /** Coins were paid for finishing it (once per task; daily tasks once per day). */
   rewarded?: boolean;
   /** Time spent via timer / stopwatch, ms. */
@@ -25,6 +27,8 @@ export interface Goal {
   tasks: Task[];
   /** Epoch ms; for goals made before the journal existed, when they were first seen by it. */
   createdAt?: number;
+  /** Deadline, YYYY-MM-DD (not used by daily goals). */
+  due?: string;
   // daily goals only
   day?: string;
   built?: number;

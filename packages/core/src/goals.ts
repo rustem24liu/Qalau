@@ -1,4 +1,5 @@
 import { isLandmark, landmarkFor } from "./city";
+import { dueRank, isDay } from "./deadline";
 import { isGoalType, isPriority, isTaskSize, PRIORITIES } from "./constants";
 import { logEvent, pruneLog } from "./log";
 import { freshWork } from "./rest";
@@ -66,9 +67,11 @@ export function normalize(state: AppState): void {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];
     if (typeof g.createdAt !== "number") g.createdAt = Date.now();
+    if (g.due !== undefined && (!isDay(g.due) || g.type === "daily")) delete g.due;
     g.tasks.forEach(t => {
       if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority;
       if (t.size !== undefined && (!isTaskSize(t.size) || t.size === "M")) delete t.size; // M is the default
+      if (t.due !== undefined && !isDay(t.due)) delete t.due;
     });
     sortByPriority(g);
   });
@@ -133,10 +136,15 @@ const rank = (t: Task) => (t.done ? PRIORITIES.length + 1 : t.priority ? PRIORIT
 
 /**
  * The list invariant: open tasks by priority (high → none), finished ones last.
- * Stable, so tasks within a group keep their manual (drag) order. Mutates.
+ * Inside a priority group, overdue and due-today tasks come first.
+ * Stable, so tasks otherwise keep their manual (drag) order. Mutates.
  */
 export function sortByPriority(g: Goal): void {
-  g.tasks = g.tasks.map((t, i) => [t, i] as const).sort(([a, i], [b, j]) => rank(a) - rank(b) || i - j).map(([t]) => t);
+  const d = today();
+  g.tasks = g.tasks
+    .map((t, i) => [t, i] as const)
+    .sort(([a, i], [b, j]) => rank(a) - rank(b) || dueRank(a, d) - dueRank(b, d) || i - j)
+    .map(([t]) => t);
 }
 
 /** Checks/unchecks a task, stops its timer and counts daily streaks. Mutates. */

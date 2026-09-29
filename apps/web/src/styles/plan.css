@@ -40,6 +40,25 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .size:hover { border-color: var(--accent); color: var(--ink); }
 .size.s-S { opacity: .75; }
 .size.s-L { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+/* deadlines */
+.due-wrap { position: relative; display: inline-flex; align-items: center; }
+.due { --c: var(--muted); display: inline-flex; align-items: center; gap: 4px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); color: var(--c); border-radius: 99px; padding: 2px 8px 2px 6px; font: 600 11.5px/1.3 "Golos Text", sans-serif; cursor: pointer; white-space: nowrap; }
+.due svg { width: 12px; height: 12px; }
+.due.overdue { --c: var(--prio-high); }
+.due.today { --c: var(--prio-medium); }
+.due.soon { --c: var(--ink); }
+.due.none { border-color: transparent; background: transparent; padding: 2px 4px; opacity: 0; }
+.task:hover .due.none, .due.none:focus-visible, .goal-due .due.none { opacity: .7; }
+@media (hover: none) { .due.none { opacity: .45; } }
+.due-clear { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 3px; }
+.due-clear:hover { color: var(--brick); }
+.due-input { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+.goal-due { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 6px; }
+.goal-due .due.none { border-color: var(--line); padding: 2px 8px 2px 6px; }
+.goal-due .due.none::after { content: "не задан"; }
+.forecast { font-size: 12.5px; color: var(--muted); }
+.forecast.late { color: var(--prio-high); }
+.forecast.ok { color: var(--leaf); }
 .prio-wrap { position: relative; display: inline-flex; }
 .prio { --c: var(--muted); display: inline-flex; align-items: center; gap: 4px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--c); border-radius: 99px; padding: 2px 8px 2px 6px; font: 600 11.5px/1.3 "Golos Text", sans-serif; cursor: pointer; white-space: nowrap; }
 .prio svg { width: 12px; height: 12px; }

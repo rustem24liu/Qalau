@@ -10,6 +10,7 @@ import { ensureAudio } from "../lib/audio";
 import { useStore } from "../store";
 import { ClockIcon, GripIcon, PlayIcon } from "./icons";
 import { PriorityPicker } from "./PriorityPicker";
+import { DuePicker } from "./DuePicker";
 import { SizeToggle } from "./SizeToggle";
 
 const PRESETS = [1, 15, 25, 45, 60];
@@ -102,6 +103,7 @@ function TaskItem({ task: t, timer, full, picking, onTogglePicker, minutes, setM
         <label htmlFor={"t-" + t.id}>{t.text}</label>
         {!t.done && <SizeToggle task={t} />}
         {!t.done && <PriorityPicker taskId={t.id} value={t.priority} />}
+        {!t.done && <DuePicker due={t.due} of="задачи" onChange={d => useStore.getState().setTaskDue(t.id, d)} />}
       </span>
       {side}
       <button className="del" type="button" aria-label="Удалить задачу" onClick={() => removeTask(t.id)}>×</button>

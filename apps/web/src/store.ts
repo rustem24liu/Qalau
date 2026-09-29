@@ -1,5 +1,5 @@
 import {
-  activeGoal, buy, CITY_LEVELS, cityLevel, cityPoints, earn, elapsed, focusCoins, logEvent, payLevels, REWARD, setRoof, touchGoal, type BuyResult, type RoofId, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, setSize, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
+  activeGoal, buy, CITY_LEVELS, cityLevel, cityPoints, earn, elapsed, focusCoins, logEvent, payLevels, REWARD, setRoof, touchGoal, type BuyResult, type RoofId, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setDue, setPriority, setSize, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
   type AppState, type Goal, type GoalType, type Priority, type TaskSize, type Timer,
 } from "@qalau/core";
 import { create } from "zustand";
@@ -46,6 +46,10 @@ interface Store {
   moveTask(id: string, to: number): void;
   setPriority(id: string, p: Priority | null): void;
   setSize(id: string, size: TaskSize): void;
+  /** Deadline of a task of the active goal (null clears it). */
+  setTaskDue(id: string, due: string | null): void;
+  /** Deadline of the active goal (null clears it). */
+  setGoalDue(due: string | null): void;
   toggleTask(id: string, done: boolean): void;
 
   /** Start a task in the active goal; ignored at MAX_PARALLEL or if it already runs. */
@@ -179,6 +183,13 @@ export const useStore = create<Store>()((set, get) => ({
     const t = g.tasks.find(x => x.id === id);
     if (t) setSize(t, size);
   })),
+
+  setTaskDue: (id, due) => get().update(withActive(g => {
+    const t = g.tasks.find(x => x.id === id);
+    if (t) setDue(t, due);
+  })),
+
+  setGoalDue: due => get().update(withActive(g => setDue(g, due))),
 
   toggleTask: (id, done) => get().update(withActive((g, s) => {
     const t = g.tasks.find(x => x.id === id);
