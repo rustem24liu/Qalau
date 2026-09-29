@@ -39,6 +39,14 @@
 span.menu-action { cursor: default; background: var(--bg); color: var(--muted); }
 .chips button:focus-visible, .menu-action:focus-visible, .menu-close:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
+/* data: backup / restore */
+.data-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.menu-action.ghost { background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+.menu-action.warn { background: var(--brick); color: #fff; }
+.data-error { color: var(--brick); }
+.data-confirm { display: grid; gap: 8px; padding: 10px 12px; border: 1px dashed var(--brick); border-radius: 12px; }
+.menu-sec + .menu-sec { padding-top: 14px; border-top: 1px solid var(--line); }
+
 @keyframes menu-fade { from { opacity: 0; } }
 @keyframes menu-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } }
 @media (prefers-reduced-motion: reduce) { .menu-backdrop, .menu-panel { animation: none; } }

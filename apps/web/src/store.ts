@@ -25,6 +25,8 @@ interface Store {
   setView(view: "site" | "city" | "shop"): void;
   buy(itemId: string): BuyResult;
   setRoof(roof: RoofId | null): void;
+  /** Replaces everything with a restored backup. */
+  replaceState(state: AppState): void;
   /** "I'll come back to it" for a neglected goal. */
   touchGoal(goalId: string): void;
   /** Saves the user's city from their answer; false if the answer is empty. */
@@ -114,6 +116,11 @@ export const useStore = create<Store>()((set, get) => ({
   setRoof: roof => get().update(s => setRoof(s, roof)),
 
   touchGoal: goalId => get().update(s => touchGoal(s, goalId)),
+
+  replaceState(state) {
+    saveState(state);
+    set({ state, view: "site", now: Date.now() });
+  },
 
   setCity(name) {
     const city = makeCity(name);

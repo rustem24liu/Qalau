@@ -10,5 +10,6 @@ export * from "./city";
 export * from "./log";
 export * from "./wallet";
 export * from "./neglect";
+export * from "./backup";
 export * from "./storage";
 export * from "./weather";

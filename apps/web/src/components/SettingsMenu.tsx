@@ -2,6 +2,7 @@ import { DAY_PHASES, PHASE_LABEL, WEATHER_KINDS, WEATHER_LABEL } from "@qalau/co
 import { useEffect, useRef, useState } from "react";
 import { useWeatherView } from "../hooks/useWeatherSync";
 import { useWeather } from "../lib/weather";
+import { DataSettings } from "./DataSettings";
 import { CloseIcon, MenuIcon } from "./icons";
 import { LocateButton, weatherText } from "./Weather";
 
@@ -49,6 +50,7 @@ export function SettingsMenu() {
               </button>
             </div>
             <WeatherSettings />
+            <DataSettings />
           </div>
         </div>
       )}
