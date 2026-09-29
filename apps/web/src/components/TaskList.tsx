@@ -10,6 +10,7 @@ import { ensureAudio } from "../lib/audio";
 import { useStore } from "../store";
 import { ClockIcon, GripIcon, PlayIcon } from "./icons";
 import { PriorityPicker } from "./PriorityPicker";
+import { SizeToggle } from "./SizeToggle";
 
 const PRESETS = [1, 15, 25, 45, 60];
 
@@ -99,6 +100,7 @@ function TaskItem({ task: t, timer, full, picking, onTogglePicker, minutes, setM
       <input type="checkbox" id={"t-" + t.id} checked={t.done} onChange={e => toggleTask(t.id, e.target.checked)} />
       <span className="task-main">
         <label htmlFor={"t-" + t.id}>{t.text}</label>
+        {!t.done && <SizeToggle task={t} />}
         {!t.done && <PriorityPicker taskId={t.id} value={t.priority} />}
       </span>
       {side}

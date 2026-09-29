@@ -1,5 +1,6 @@
 import { logEvent } from "./log";
-import type { AppState, Task } from "./types";
+import { sizeOf } from "./constants";
+import type { AppState, Task, TaskSize } from "./types";
 
 export type RoofId = "red" | "green" | "blue" | "black";
 
@@ -19,6 +20,7 @@ export const freshWallet = (): Wallet => ({ coins: 0, freezes: 0, owned: [], roo
 
 /** Coins for each kind of progress. */
 export const REWARD = {
+  /** A normal (M) task; see TASK_COINS for every size. */
   task: 10,
   hut: 20,
   /** Every 7 days of a daily streak. */
@@ -39,10 +41,13 @@ export function earn(s: AppState, amount: number, reason: string, now = Date.now
 }
 
 /** Pays for a finished task once; unchecking and checking again pays nothing. Mutates. */
+/** Coins for finishing a task, by its size. */
+export const TASK_COINS: Record<TaskSize, number> = { S: 5, M: REWARD.task, L: 20 };
+
 export function rewardTask(s: AppState, t: Task, now = Date.now()): void {
   if (t.rewarded) return;
   t.rewarded = true;
-  earn(s, REWARD.task, "task", now);
+  earn(s, TASK_COINS[sizeOf(t)], "task", now);
 }
 
 export const focusCoins = (ms: number) => Math.min(REWARD.focusMax, Math.floor(ms / (5 * 60_000)) * REWARD.focus5);

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { freshWallet } from "./wallet";
-import { activeGoal, exampleState, markDone, moveTask, newGoal, normalize, rollDaily, setPriority, sortByPriority } from "./goals";
+import { activeGoal, exampleState, markDone, moveTask, newGoal, normalize, rollDaily, setPriority, setSize, sortByPriority } from "./goals";
 import type { AppState, Goal, Priority, Task, Timer } from "./types";
 
 // Tuesday, 29 Sep 2026, 10:00 local time
@@ -233,5 +233,21 @@ describe("automatic task order", () => {
     const s = stateOf(g);
     rollDaily(s);
     expect(ids(s)).toBe("u n");
+  });
+});
+
+describe("setSize", () => {
+  it("stores S and L, and M as no size", () => {
+    const t: Task = { id: "a", text: "", done: false };
+    setSize(t, "L");
+    expect(t.size).toBe("L");
+    setSize(t, "M");
+    expect("size" in t).toBe(false);
+  });
+
+  it("normalize drops unknown sizes and a stored M", () => {
+    const s = stateOf({ ...newGoal("big", ""), tasks: [{ id: "a", text: "", done: false, size: "XL" as never }, { id: "b", text: "", done: false, size: "M" }, { id: "c", text: "", done: false, size: "S" }] });
+    normalize(s);
+    expect(s.goals[0].tasks.map(t => t.size)).toEqual([undefined, undefined, "S"]);
   });
 });

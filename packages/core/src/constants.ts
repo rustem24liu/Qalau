@@ -1,4 +1,4 @@
-import type { GoalType, Priority } from "./types";
+import type { GoalType, Priority, TaskSize } from "./types";
 
 export const STAGES = ["Фундамент", "Стены", "Окна и дверь", "Крыша", "Труба", "Сад", "Новоселье"] as const;
 export const FINAL_STAGE = STAGES.length - 1;
@@ -44,3 +44,14 @@ export const PRIORITIES: Priority[] = ["high", "medium", "low"];
 export const PRIORITY_LABEL: Record<Priority, string> = { high: "Высокий", medium: "Средний", low: "Низкий" };
 
 export const isPriority = (p: unknown): p is Priority => typeof p === "string" && p in PRIORITY_LABEL;
+
+export const TASK_SIZES: TaskSize[] = ["S", "M", "L"];
+
+export const SIZE_LABEL: Record<TaskSize, string> = { S: "Мелкая", M: "Обычная", L: "Крупная" };
+
+/** Share of the building a task is worth: a large task builds three times a small one. */
+export const SIZE_WEIGHT: Record<TaskSize, number> = { S: 1, M: 2, L: 3 };
+
+export const isTaskSize = (s: unknown): s is TaskSize => typeof s === "string" && s in SIZE_WEIGHT;
+
+export const sizeOf = (t: { size?: TaskSize }): TaskSize => t.size ?? "M";

@@ -2,11 +2,16 @@ export type GoalType = "big" | "medium" | "daily";
 
 export type Priority = "high" | "medium" | "low";
 
+/** How big a task is: small, normal (the default), large. */
+export type TaskSize = "S" | "M" | "L";
+
 export interface Task {
   id: string;
   text: string;
   done: boolean;
   priority?: Priority;
+  /** Missing means "M". */
+  size?: TaskSize;
   /** Coins were paid for finishing it (once per task; daily tasks once per day). */
   rewarded?: boolean;
   /** Time spent via timer / stopwatch, ms. */

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { markDone, newGoal, normalize, rollDaily } from "./goals";
 import { endRest, freshWork, startRest } from "./rest";
 import type { AppState, Goal } from "./types";
-import { buy, focusCoins, freshWallet, payLevels, REWARD, SHOP, setRoof } from "./wallet";
+import { buy, focusCoins, freshWallet, payLevels, REWARD, SHOP, setRoof, TASK_COINS } from "./wallet";
 
 const m = 60_000;
 const goal = (type: Goal["type"] = "big", n = 2): Goal => ({ ...newGoal(type, ""), tasks: Array.from({ length: n }, (_, i) => ({ id: "t" + i, text: "", done: false })) });
@@ -150,5 +150,15 @@ describe("normalize wallet", () => {
     const old = { goals: [goal()], timers: [] } as unknown as AppState;
     normalize(old);
     expect(old.wallet).toEqual(freshWallet());
+  });
+});
+
+describe("coins by task size", () => {
+  it("pays 5 / 10 / 20 for S / M / L", () => {
+    const g: Goal = { ...goal("big", 3), tasks: [{ id: "s", text: "", done: false, size: "S" }, { id: "m", text: "", done: false }, { id: "l", text: "", done: false, size: "L" }] };
+    const s = state(g);
+    [...g.tasks].forEach(t => markDone(s, g, t, true));
+    expect(s.wallet.coins).toBe(TASK_COINS.S + TASK_COINS.M + TASK_COINS.L);
+    expect(TASK_COINS).toEqual({ S: 5, M: 10, L: 20 });
   });
 });

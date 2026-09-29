@@ -1,4 +1,4 @@
-import { fmtDur } from "@qalau/core";
+import { fmtDur, piecesPerTask, TASK_SIZES } from "@qalau/core";
 import { scene } from "../lib/scene";
 import { useActiveGoal } from "../store";
 import { AddTaskForm } from "./AddTaskForm";
@@ -14,7 +14,9 @@ export function PlanPanel() {
   const total = goal.tasks.length;
   const spentAll = goal.tasks.reduce((a, t) => a + (t.spent || 0), 0);
   const hint =
-    (total ? `Одна задача ≈ ${Math.round(N / total)} деталей · всего в постройке ${N} деталей` : `Добавьте первую задачу · в постройке ${N} деталей`) +
+    (total
+      ? `Задача ${TASK_SIZES.map(size => `${size} ≈ ${piecesPerTask(goal, N, { id: "", text: "", done: false, size })}`).join(", ")} деталей · всего ${N}`
+      : `Добавьте первую задачу · в постройке ${N} деталей`) +
     (spentAll ? ` · потрачено ${fmtDur(spentAll)}` : "");
 
   return (

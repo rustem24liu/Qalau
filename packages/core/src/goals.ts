@@ -1,10 +1,10 @@
 import { isLandmark, landmarkFor } from "./city";
-import { isGoalType, isPriority, PRIORITIES } from "./constants";
+import { isGoalType, isPriority, isTaskSize, PRIORITIES } from "./constants";
 import { logEvent, pruneLog } from "./log";
 import { freshWork } from "./rest";
 import { daysAgo, today, yesterday } from "./date";
 import { earn, freshWallet, normalizeWallet, REWARD, rewardTask } from "./wallet";
-import type { AppState, Goal, GoalType, Priority, Task } from "./types";
+import type { AppState, Goal, GoalType, Priority, Task, TaskSize } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -66,7 +66,10 @@ export function normalize(state: AppState): void {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];
     if (typeof g.createdAt !== "number") g.createdAt = Date.now();
-    g.tasks.forEach(t => { if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority; });
+    g.tasks.forEach(t => {
+      if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority;
+      if (t.size !== undefined && (!isTaskSize(t.size) || t.size === "M")) delete t.size; // M is the default
+    });
     sortByPriority(g);
   });
   if (!state.goals.length) {
@@ -112,6 +115,12 @@ export function moveTask(g: Goal, taskId: string, to: number): void {
   if (from < 0) return;
   const [t] = g.tasks.splice(from, 1);
   g.tasks.splice(Math.max(0, Math.min(to, g.tasks.length)), 0, t);
+}
+
+/** Sets a task's size; "M" is stored as no size. Mutates. */
+export function setSize(t: Task, size: TaskSize): void {
+  if (size === "M") delete t.size;
+  else t.size = size;
 }
 
 /** Sets or clears (null) a task's priority. Mutates. */
