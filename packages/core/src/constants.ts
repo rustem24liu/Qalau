@@ -25,10 +25,10 @@ export const MAX_PARALLEL = 3;
  * Work / break rhythm. Pomodoro is 25/5, DeskTime's top performers ~52/17, ultradian cycles ~90 min;
  * 50/10 keeps the prompt rare enough not to nag.
  */
-export const TIRED_AFTER = 1 * 60000;
-export const REST_FOR = 2 * 60000;
+export const TIRED_AFTER = 50 * 60000;
+export const REST_FOR = 10 * 60000;
 /** "Later" asks again after this much more work. */
-export const SNOOZE_FOR = 2 * 60000;
+export const SNOOZE_FOR = 10 * 60000;
 
 export const GOAL_TYPES = Object.keys(KINDS) as GoalType[];
 
