@@ -73,6 +73,11 @@ export function createScene2D(): SceneApi {
       host = el;
       return () => { el.innerHTML = ""; host = null; };
     },
+    showCity(view) {
+      // no 3D: a simple grid of the goals' houses
+      curGoal = null;
+      if (host) host.innerHTML = `<div class="city2d">${view.lots.map(l => svg(Math.min(l.k, N), 0, false)).join("")}</div>`;
+    },
     show(goalId, _type, k) {
       const anim = goalId === curGoal && k > lastK;
       if (host) host.innerHTML = svg(k, anim ? lastK : k, anim);

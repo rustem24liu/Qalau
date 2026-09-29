@@ -1,7 +1,9 @@
 import type { GoalType } from "@qalau/core";
 import type { Mood } from "./builder";
+import type { CityView } from "./city";
 
-export type { Mood };
+export type { CityView, Mood };
+export type { CityLot } from "./city";
 
 export type Thumb = { kind: "img"; src: string } | { kind: "svg"; markup: string };
 
@@ -16,6 +18,8 @@ export interface SceneApi {
   stages(type: GoalType): number[];
   /** Attaches the scene to a DOM element; returns a detach function. */
   mount(host: HTMLElement): () => void;
+  /** Switches to the user's city: the landmark and a house per goal. `show()` switches back. */
+  showCity(view: CityView): void;
   /** Shows goal `goalId` with the first k pieces built (animates growth within the same goal). */
   show(goalId: string, type: GoalType, k: number): void;
   setNight(on: boolean): void;

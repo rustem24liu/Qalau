@@ -1,5 +1,5 @@
 import {
-  activeGoal, elapsed, endRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, markDone, moveTask, setPriority, sortByPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
+  activeGoal, elapsed, endRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, sortByPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
   type AppState, type Goal, type GoalType, type Priority, type Timer,
 } from "@qalau/core";
 import { create } from "zustand";
@@ -12,6 +12,8 @@ interface Store {
   toast: { id: number; text: string } | null;
   /** Bumped when a break ends — the builder cheers. */
   cheer: number;
+  /** Screen: one goal's building site, or the whole city. Not saved. */
+  view: "site" | "city";
 
   tick(): void;
   showToast(text: string): void;
@@ -19,6 +21,12 @@ interface Store {
   update(fn: (s: AppState) => void): void;
   /** Reset daily goals if the date changed. */
   rollDay(): void;
+
+  setView(view: "site" | "city"): void;
+  /** Saves the user's city from their answer; false if the answer is empty. */
+  setCity(name: string): boolean;
+  /** From the city: open a goal's building site. */
+  openGoal(id: string): void;
 
   selectGoal(id: string): void;
   addGoal(type: GoalType): void;
@@ -65,6 +73,7 @@ export const useStore = create<Store>()((set, get) => ({
   now: Date.now(),
   toast: null,
   cheer: 0,
+  view: "site",
 
   tick: () => set({ now: Date.now() }),
   showToast: text => set({ toast: { id: Date.now(), text } }),
@@ -84,6 +93,19 @@ export const useStore = create<Store>()((set, get) => ({
     if (!rollDaily(next)) return;
     if (!next.example) saveState(next);
     set({ state: next });
+  },
+
+  setView: view => set({ view }),
+
+  setCity(name) {
+    const city = makeCity(name);
+    if (city) get().update(s => { s.city = city; });
+    return !!city;
+  },
+
+  openGoal(id) {
+    get().selectGoal(id);
+    set({ view: "site" });
   },
 
   selectGoal: id => get().update(s => { s.activeId = id; }),

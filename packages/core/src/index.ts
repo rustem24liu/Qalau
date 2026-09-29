@@ -6,5 +6,6 @@ export * from "./goals";
 export * from "./timer";
 export * from "./progress";
 export * from "./rest";
+export * from "./city";
 export * from "./storage";
 export * from "./weather";

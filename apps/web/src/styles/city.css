@@ -1,0 +1,28 @@
+/* Screen switch: building site / city */
+.view-tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; justify-self: start; max-width: 100%; }
+.view-tabs button { border: 0; background: transparent; color: var(--muted); font: 600 14px/1 "Golos Text", sans-serif; padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.view-tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* first visit: which city? */
+.city-ask { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 28px 20px; display: grid; gap: 14px; justify-items: start; max-width: 620px; }
+.city-ask h2 { font: 700 22px/1.2 "Unbounded", sans-serif; margin: 0; }
+.city-ask .sub { margin: 0; }
+.city-ask form { width: 100%; }
+.city-ask .btn:disabled { opacity: .5; cursor: not-allowed; }
+.city-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.city-chips .chip { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 99px; padding: 7px 14px; cursor: pointer; font: 500 13.5px/1 "Golos Text", sans-serif; }
+.city-chips .chip:hover { border-color: var(--accent); }
+
+/* city screen */
+.city-sky { aspect-ratio: 1 / 1; }
+.city-name { font: 700 19px/1.25 "Unbounded", sans-serif; margin: 2px 0 0; }
+.city-houses { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.city-houses button { width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; text-align: left; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 9px 12px; cursor: pointer; font: inherit; }
+.city-houses button:hover { border-color: var(--accent); }
+.city-houses .nm { font-weight: 600; overflow-wrap: anywhere; }
+.city-houses .pc { font: 500 12px/1 "JetBrains Mono", monospace; color: var(--muted); white-space: nowrap; }
+.mini-bar { grid-column: 1 / -1; height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.mini-bar i { display: block; height: 100%; background: var(--accent); }
+
+/* 2D fallback city: a grid of little houses */
+.city2d { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; padding: 12px; align-content: start; }

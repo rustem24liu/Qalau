@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { FINAL_STAGE, GOAL_TYPES, type GoalType } from "@qalau/core";
 import { Builder } from "./builder";
+import { CityScene } from "./city";
 import { buildHouse, type House } from "./house";
 import { houseConfigs } from "./houseConfig";
 import { createLighting } from "./lighting";
@@ -59,7 +60,11 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
   let W0 = 1, H0 = 1, needs = true;
   let workers = 0, nextIdx = 0;
   const head = new THREE.Vector3();
-  const cur = () => (curType ? B[curType] : undefined);
+  /** "city" shows the user's whole city instead of one building site. */
+  let mode: "site" | "city" = "site";
+  const city = new CityScene(world, mat, bpMat, prim, CFG);
+  const cur = () => (mode === "site" && curType ? B[curType] : undefined);
+  const SITE_SHADOW = 12;
 
   // ---- camera ----
   function fit(type: GoalType, w: number, h: number) {
@@ -70,6 +75,24 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
     cam.lookAt(0, ty, 0);
     cam.updateProjectionMatrix();
   }
+
+  function fitCity(w: number, h: number) {
+    const aspect = w / h, s = city.size;
+    const halfH = Math.max(s * 0.34, (s * 0.62) / aspect);
+    Object.assign(cam, { left: -halfH * aspect, right: halfH * aspect, top: halfH, bottom: -halfH, far: 400 });
+    cam.position.set(dir.x * 150, 4 + dir.y * 150, dir.z * 150);
+    cam.lookAt(0, 4, 0);
+    cam.updateProjectionMatrix();
+  }
+
+  const refit = () => {
+    if (mode === "city") fitCity(W0, H0);
+    else if (curType) fit(curType, W0, H0);
+  };
+  const applyLight = () => light.apply(mode === "city" ? 0 : dusk, night, cur());
+
+  /** Builders live on the building site only; extras only while their timers run. */
+  const syncBuilders = () => builders.forEach((b, j) => { b.group.visible = mode === "site" && (j === 0 || j < workers); });
 
   // ---- drag to rotate ----
   let drag: { x: number } | null = null, vel = 0;
@@ -91,6 +114,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
 
   // ---- render loop ----
   function frame(t: number) {
+    if (mode === "city") return frameCity();
     const h = cur();
     if (!h) return;
     let active = false;
@@ -134,6 +158,18 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
     if (active || needs) { renderer.render(scene, cam); needs = false; }
   }
 
+  function frameCity() {
+    let active = false;
+    if (Math.abs(night - nightT) > 0.001) {
+      night += (nightT - night) * 0.06;
+      if (Math.abs(night - nightT) < 0.002) night = nightT;
+      applyLight();
+      active = true;
+    }
+    if (!drag && Math.abs(vel) > 0.0004) { world.rotation.y += vel; vel *= 0.93; active = true; }
+    if (active || needs) { renderer.render(scene, cam); needs = false; }
+  }
+
   // ---- thumbnails (separate offscreen renderer, cached) ----
   let thumbRenderer: THREE.WebGLRenderer | null = null;
   const cache = new Map<string, Thumb>();
@@ -155,7 +191,8 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       GOAL_TYPES.forEach(t => { B[t].grp.visible = t === type; });
       h.pieces.forEach((p, i) => { p.obj.visible = i < k; p.obj.position.y = 0; });
       world.rotation.y = 0;
-      const shown = builders.map(b => b.group.visible);
+      const shown = builders.map(b => b.group.visible), cityShown = city.group.visible;
+      city.group.visible = false;
       builders.forEach(b => { b.group.visible = false; });
       light.apply(k >= h.N ? 1 : 0, nightOn ? 1 : 0, h);
       fit(type, THUMB_W, THUMB_H);
@@ -166,8 +203,9 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       vis.forEach(([t, v]) => { B[t].grp.visible = v; });
       world.rotation.y = rot;
       builders.forEach((b, j) => { b.group.visible = shown[j]; });
-      if (curType) fit(curType, W0, H0);
-      light.apply(dusk, night, cur());
+      city.group.visible = cityShown;
+      refit();
+      applyLight();
       needs = true;
       const res: Thumb = { kind: "img", src };
       cache.set(key, res);
@@ -190,7 +228,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
         if (!w || !h) return;
         W0 = w; H0 = h;
         renderer.setSize(w, h, false);
-        if (curType) fit(curType, w, h);
+        refit();
         needs = true;
       };
       const ro = new ResizeObserver(resize);
@@ -206,6 +244,14 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
 
     show(goalId, type, k) {
       const h = B[type];
+      if (mode === "city") {
+        // back from the city: force the site to be re-shown and re-fitted
+        mode = "site";
+        city.group.visible = false;
+        curType = null;
+        light.setExtent(SITE_SHADOW);
+        syncBuilders();
+      }
       const animate = goalId === curGoal && type === curType && !reduced;
       if (type !== curType) {
         GOAL_TYPES.forEach(t => { B[t].grp.visible = t === type; });
@@ -236,9 +282,23 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       needs = true;
     },
 
+    showCity(view) {
+      if (mode !== "city") {
+        mode = "city";
+        GOAL_TYPES.forEach(t => { B[t].grp.visible = false; });
+        city.group.visible = true;
+        syncBuilders();
+      }
+      city.update(view);
+      light.setExtent(city.size * 0.75);
+      fitCity(W0, H0);
+      applyLight();
+      needs = true;
+    },
+
     setNight(on) {
       nightT = on ? 1 : 0;
-      if (reduced) { night = nightT; light.apply(dusk, night, cur()); }
+      if (reduced) { night = nightT; applyLight(); }
       needs = true;
     },
 
@@ -250,7 +310,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
         if (j === 0) return;
         const on = j < n;
         if (on && !b.group.visible && h) b.placeAt(h, SPAWN_DX * j, true); // arrive from the console
-        b.group.visible = on;
+        b.group.visible = on && mode === "site";
       });
       workers = n;
       needs = true;

@@ -48,5 +48,12 @@ export function createLighting(scene: THREE.Scene, mat: Materials, bpMat: THREE.
     bpMat.opacity = 0.5 * (1 - v) * (1 - 0.4 * n);
   }
 
-  return { apply };
+  /** Shadow coverage; the city is much bigger than a building site. */
+  function setExtent(e: number): void {
+    Object.assign(sun.shadow.camera, { left: -e, right: e, top: e, bottom: -e, far: 50 + 3 * e });
+    sun.position.set(9, 16, 7).multiplyScalar(Math.max(1, e / 12));
+    sun.shadow.camera.updateProjectionMatrix();
+  }
+
+  return { apply, setExtent };
 }

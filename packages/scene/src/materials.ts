@@ -19,7 +19,7 @@ export function createMaterials() {
     leaf: M(0x5F9B49), leaf2: M(0x77B057), trunk: M(0x6E4E35), stone: M(0xD2CABB),
     smoke: M(0xF1F3F5, { transparent: true, opacity: 0.82 }),
     fl1: M(0xE8A33D), fl2: M(0xE06A7C), fl3: M(0xF3EEE0),
-    flag: M(0xE3A12F), lamp: M(0xFFE0A0, { emissive: 0xFFC158, emissiveIntensity: 0 }),
+    flag: M(0xE3A12F), gold: M(0xE8B53A, { metalness: 0.55, roughness: 0.3, emissive: 0x6B4A10, emissiveIntensity: 0.35 }), white: M(0xF2F2EE), steel2: M(0xB8C0C8), road: M(0x6E747B), paving: M(0xB9B0A0), snow: M(0xF4F6F8), rock: M(0x8A8F96), lamp: M(0xFFE0A0, { emissive: 0xFFC158, emissiveIntensity: 0 }),
     conBody: M(0x5B6470), conPanel: M(0x3E4550),
     conBtn: M(0xE0413A, { emissive: 0x8A1A12, emissiveIntensity: 0.25, roughness: 0.5 }),
     conLight: M(0x9BE36A, { emissive: 0x7DDC4A, emissiveIntensity: 0.2 }),

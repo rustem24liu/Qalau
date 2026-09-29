@@ -31,7 +31,15 @@ export interface House {
   btnY: number;
 }
 
-export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materials, bpMat: THREE.LineBasicMaterial, { box, blob }: Primitives): House {
+export interface BuildOptions {
+  /** A house on a city lot: no floating island, no bed, no console — just the building and its garden. */
+  lot?: boolean;
+}
+
+export function buildHouse(
+  parent: THREE.Object3D, cfg: HouseConfig, mat: Materials, bpMat: THREE.LineBasicMaterial, { box, blob }: Primitives,
+  { lot = false }: BuildOptions = {},
+): House {
   const grp = new THREE.Group();
   grp.visible = false;
   parent.add(grp);
@@ -40,12 +48,14 @@ export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materi
   const y0 = 0.4;
 
   // ---- island ----
-  grp.add(box(IW, 0.34, ID, mat.grass, 0, -0.17, 0));
-  grp.add(box(IW - 0.4, 1.3, ID - 0.4, mat.dirt, 0, -0.99, 0));
-  grp.add(box(IW - 1.8, 0.9, ID - 1.8, mat.dirt2, 0, -2.0, 0));
-  grp.add(box(Math.max(2, IW - 4.4), 0.6, Math.max(2, ID - 4.2), mat.dirt2, 0, -2.7, 0));
-  ([[-1, -1], [1, 1], [-1, 1], [1, -0.3]] as const).forEach(([sx, sz], i) =>
-    grp.add(box(0.5, 0.36, 0.5, i % 2 ? mat.grass2 : mat.grass, sx * (IX - 0.7), 0.18, sz * (IZ - 0.6))));
+  if (!lot) {
+    grp.add(box(IW, 0.34, ID, mat.grass, 0, -0.17, 0));
+    grp.add(box(IW - 0.4, 1.3, ID - 0.4, mat.dirt, 0, -0.99, 0));
+    grp.add(box(IW - 1.8, 0.9, ID - 1.8, mat.dirt2, 0, -2.0, 0));
+    grp.add(box(Math.max(2, IW - 4.4), 0.6, Math.max(2, ID - 4.2), mat.dirt2, 0, -2.7, 0));
+    ([[-1, -1], [1, 1], [-1, 1], [1, -0.3]] as const).forEach(([sx, sz], i) =>
+      grp.add(box(0.5, 0.36, 0.5, i % 2 ? mat.grass2 : mat.grass, sx * (IX - 0.7), 0.18, sz * (IZ - 0.6))));
+  }
 
   // ---- roof geometry ----
   const Yw = y0 + rows * 0.5, rh = cfg.ridge, eZ = hz + 0.4, slope = rh / hz;
@@ -194,7 +204,7 @@ export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materi
   camp.add(box(0.1, 0.22, 0.1, mat.ridge, nsX, 0.61, nsZ));
   camp.add(box(0.26, 0.2, 0.26, mat.lamp, nsX, 0.8, nsZ));                         // glows at night
   camp.add(box(bedW + 0.7, 0.03, 1.1, mat.fl2, bedX, 0.015, bedL / 2 + 0.55));      // rug at the foot
-  grp.add(camp);
+  if (!lot) grp.add(camp);
 
   // ---- control console (static): the builder presses its button when tasks are ticked off ----
   const idle = new THREE.Vector3(dr.c - dr.w / 2 - 1.7, 0, Math.min(hz + 2.0, IZ - 1.1));
@@ -212,7 +222,7 @@ export function buildHouse(parent: THREE.Object3D, cfg: HouseConfig, mat: Materi
   con.add(box(0.03, 0.42, 0.03, mat.ridge, -0.17, 0.88, -0.14));
   con.add(box(0.08, 0.08, 0.08, mat.conLight, -0.17, 1.12, -0.14));
   con.scale.setScalar(1.25);
-  grp.add(con);
+  if (!lot) grp.add(con);
 
   return {
     cfg, grp, pieces, N: pieces.length,

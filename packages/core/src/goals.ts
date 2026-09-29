@@ -1,3 +1,4 @@
+import { isLandmark, landmarkFor } from "./city";
 import { isGoalType, isPriority, PRIORITIES } from "./constants";
 import { freshWork } from "./rest";
 import { today, yesterday } from "./date";
@@ -47,6 +48,8 @@ export function normalize(state: AppState): void {
   if (!Array.isArray(state.timers)) state.timers = state.timer ? [state.timer] : [];
   delete state.timer;
   if (!state.work) state.work = freshWork();
+  if (state.city && (typeof state.city.name !== "string" || !state.city.name.trim())) state.city = null;
+  else if (state.city && !isLandmark(state.city.landmark)) state.city.landmark = landmarkFor(state.city.name);
   state.goals.forEach(g => {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];

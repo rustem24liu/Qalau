@@ -55,6 +55,8 @@ export interface Rest {
   resume: string[];
 }
 
+import type { City } from "./city";
+
 export interface AppState {
   goals: Goal[];
   activeId?: string;
@@ -64,6 +66,8 @@ export interface AppState {
   timers: Timer[];
   work: WorkLog;
   rest?: Rest | null;
+  /** The user's home city; asked the first time the city view opens. */
+  city?: City | null;
   /** @deprecated single timer from before parallel tasks; migrated by normalize(). */
   timer?: Timer | null;
 }
