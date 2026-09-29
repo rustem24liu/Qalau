@@ -26,3 +26,48 @@
 
 /* 2D fallback city: a grid of little houses */
 .city2d { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; padding: 12px; align-content: start; }
+
+/* city level */
+.city-level { display: grid; gap: 6px; padding: 12px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); }
+.perks { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.perks li { display: flex; gap: 6px; align-items: baseline; }
+.perks li::before { content: "○"; color: var(--line); }
+.perks li.got { color: var(--ink); }
+.perks li.got::before { content: "●"; color: var(--accent); }
+.perks b { font-weight: 600; white-space: nowrap; }
+
+/* tabs + coin balance */
+.tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.coin { display: inline-block; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FFE69A, #E3A12F 60%, #B8791A); box-shadow: inset 0 0 0 1.5px #B8791A; vertical-align: -3px; margin-right: 6px; }
+.coins { display: inline-flex; align-items: center; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 8px 14px; font: 700 14px/1 "JetBrains Mono", monospace; cursor: pointer; font-variant-numeric: tabular-nums; }
+.coins:hover { border-color: var(--accent); }
+.coins.bump { animation: coin-bump .7s ease; }
+@keyframes coin-bump { 30% { transform: scale(1.15); border-color: var(--accent); } }
+@media (prefers-reduced-motion: reduce) { .coins.bump { animation: none; } }
+
+/* shop */
+.shop { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: grid; gap: 18px; }
+.shop-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.shop h2 { font: 700 22px/1.2 "Unbounded", sans-serif; margin: 0; }
+.shop-head .sub { max-width: 70ch; margin-top: 6px; }
+.shop-balance { font: 700 24px/1 "JetBrains Mono", monospace; display: flex; align-items: center; }
+.shop-balance .coin { width: 22px; height: 22px; }
+.shop-group { display: grid; gap: 8px; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.shop-item { display: grid; gap: 6px; align-content: start; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
+.shop-item .sub { margin: 0; font-size: 13px; }
+.shop-item.owned { border-color: var(--leaf); }
+.shop-item.poor { animation: shake .4s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.shop-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.shop-actions .btn { display: inline-flex; align-items: center; padding: 8px 12px; }
+.shop-actions .btn:disabled { opacity: .45; cursor: not-allowed; }
+.stock { font-size: 12.5px; color: var(--muted); }
+
+/* neglected goals */
+.neglect-note { display: grid; gap: 8px; padding: 12px; border-radius: 10px; border: 1px dashed var(--grass2); background: color-mix(in srgb, var(--grass) 12%, transparent); font-size: 13.5px; }
+.neglect-note.n2 { border-color: var(--brick); background: color-mix(in srgb, var(--brick) 10%, transparent); }
+.neglect-note p { margin: 0; }
+.neglect-note .btn { justify-self: start; }
+.neglect-tag { justify-self: start; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 99px; margin-inline: 2px; background: color-mix(in srgb, var(--grass) 25%, transparent); color: var(--ink); }
+.neglect-tag.n2 { background: color-mix(in srgb, var(--brick) 22%, transparent); }

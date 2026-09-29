@@ -4,8 +4,11 @@ const dstr = (d: Date) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + 
 
 export const today = () => dstr(new Date());
 
-export const yesterday = () => {
+/** Local date n days ago, as YYYY-MM-DD. */
+export const daysAgo = (n: number) => {
   const d = new Date();
-  d.setDate(d.getDate() - 1);
+  d.setDate(d.getDate() - n);
   return dstr(d);
 };
+
+export const yesterday = () => daysAgo(1);

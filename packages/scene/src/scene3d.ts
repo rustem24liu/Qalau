@@ -2,10 +2,10 @@ import * as THREE from "three";
 import { FINAL_STAGE, GOAL_TYPES, type GoalType } from "@qalau/core";
 import { Builder } from "./builder";
 import { CityScene } from "./city";
-import { buildHouse, type House } from "./house";
+import { buildHouse, setNeglect, type House } from "./house";
 import { houseConfigs } from "./houseConfig";
 import { createLighting } from "./lighting";
-import { createBlueprintMaterial, createMaterials } from "./materials";
+import { applyRoofTheme, createBlueprintMaterial, createMaterials, type RoofTheme } from "./materials";
 import { createPrimitives } from "./primitives";
 import type { SceneApi, SceneOptions, Thumb } from "./types";
 
@@ -58,7 +58,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
 
   let curType: GoalType | null = null, curGoal: string | null = null;
   let W0 = 1, H0 = 1, needs = true;
-  let workers = 0, nextIdx = 0;
+  let workers = 0, nextIdx = 0, roof: RoofTheme | null = null;
   const head = new THREE.Vector3();
   /** "city" shows the user's whole city instead of one building site. */
   let mode: "site" | "city" = "site";
@@ -174,7 +174,7 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
   let thumbRenderer: THREE.WebGLRenderer | null = null;
   const cache = new Map<string, Thumb>();
   function thumb(type: GoalType, k: number, nightOn: boolean): Thumb | null {
-    const key = type + "|" + k + "|" + nightOn;
+    const key = type + "|" + k + "|" + nightOn + "|" + roof;
     const hit = cache.get(key);
     if (hit) return hit;
     try {
@@ -192,7 +192,9 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       h.pieces.forEach((p, i) => { p.obj.visible = i < k; p.obj.position.y = 0; });
       world.rotation.y = 0;
       const shown = builders.map(b => b.group.visible), cityShown = city.group.visible;
+      const neglectShown = [h.weeds.visible, h.sign.visible];
       city.group.visible = false;
+      setNeglect(h, 0); // thumbnails are of the plain building
       builders.forEach(b => { b.group.visible = false; });
       light.apply(k >= h.N ? 1 : 0, nightOn ? 1 : 0, h);
       fit(type, THUMB_W, THUMB_H);
@@ -204,6 +206,8 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       world.rotation.y = rot;
       builders.forEach((b, j) => { b.group.visible = shown[j]; });
       city.group.visible = cityShown;
+      h.weeds.visible = neglectShown[0];
+      h.sign.visible = neglectShown[1];
       refit();
       applyLight();
       needs = true;
@@ -293,6 +297,18 @@ export function createScene3D({ night: startNight, reducedMotion: reduced }: Sce
       light.setExtent(city.size * 0.75);
       fitCity(W0, H0);
       applyLight();
+      needs = true;
+    },
+
+    setNeglect(n) {
+      GOAL_TYPES.forEach(t => setNeglect(B[t], n)); // one building per type is shared by all goals of it
+      needs = true;
+    },
+
+    setRoof(theme) {
+      if (theme === roof) return;
+      roof = theme;
+      applyRoofTheme(mat, theme);
       needs = true;
     },
 

@@ -45,3 +45,29 @@ export function cityPoints(s: AppState): number {
 
 /** 0..1 — how much of the landmark stands. */
 export const landmarkProgress = (s: AppState) => Math.min(1, cityPoints(s) / LANDMARK_TASKS);
+
+/** City growth by finished work (cityPoints). Each level unlocks something new in the city. */
+export interface CityLevel {
+  name: string;
+  /** Points needed. */
+  from: number;
+  /** What appears in the city at this level. */
+  perk: string;
+}
+
+export const CITY_LEVELS: CityLevel[] = [
+  { name: "Посёлок", from: 0, perk: "Площадь и первые дома" },
+  { name: "Городок", from: 15, perk: "Фонари вдоль улиц" },
+  { name: "Город", from: 40, perk: "Парк на свободных участках" },
+  { name: "Большой город", from: 90, perk: "Фонтан на площади" },
+  { name: "Мегаполис", from: 160, perk: "Небоскрёбы на окраинах" },
+];
+
+/** Index into CITY_LEVELS for this many points. */
+export const cityLevel = (points: number) => CITY_LEVELS.reduce((lv, l, i) => (points >= l.from ? i : lv), 0);
+
+/** Progress to the next level: points gained since this level, and needed for the next (null at the top). */
+export function levelProgress(points: number): { level: number; into: number; need: number | null } {
+  const level = cityLevel(points), next = CITY_LEVELS[level + 1];
+  return { level, into: points - CITY_LEVELS[level].from, need: next ? next.from - CITY_LEVELS[level].from : null };
+}

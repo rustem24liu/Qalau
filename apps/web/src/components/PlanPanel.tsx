@@ -3,6 +3,7 @@ import { scene } from "../lib/scene";
 import { useActiveGoal } from "../store";
 import { AddTaskForm } from "./AddTaskForm";
 import { GoalHeader } from "./GoalHeader";
+import { NeglectNote } from "./NeglectNote";
 import { DailyNote, GoalTypeSwitch } from "./GoalTypeSwitch";
 import { TaskList } from "./TaskList";
 
@@ -19,6 +20,7 @@ export function PlanPanel() {
   return (
     <div className="plan">
       <GoalHeader key={goal.id} goal={goal} />
+      <NeglectNote goal={goal} />
       <GoalTypeSwitch goal={goal} />
       <DailyNote goal={goal} />
       <div>

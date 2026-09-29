@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { freshWallet } from "./wallet";
 import { REST_FOR, REST_MAX, REST_MIN, SNOOZE_FOR, TIRED_AFTER } from "./constants";
 import { endRest, extendRest, freshWork, isTired, restLeft, resumeTask, snoozeRest, startRest, syncWork, wake, workedMs } from "./rest";
 import { togglePause } from "./timer";
@@ -9,7 +10,7 @@ const timer = (taskId: string): Timer => ({ mode: "up", goalId: "g", taskId, sta
 
 /** Two tasks running since T0, work clock started. */
 function working(): AppState {
-  const s: AppState = { goals: [], timers: [timer("a"), timer("b")], work: freshWork() };
+  const s: AppState = { goals: [], timers: [timer("a"), timer("b")], work: freshWork(), log: [], wallet: freshWallet() };
   syncWork(s, T0);
   return s;
 }

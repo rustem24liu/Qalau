@@ -19,7 +19,7 @@ export function createMaterials() {
     leaf: M(0x5F9B49), leaf2: M(0x77B057), trunk: M(0x6E4E35), stone: M(0xD2CABB),
     smoke: M(0xF1F3F5, { transparent: true, opacity: 0.82 }),
     fl1: M(0xE8A33D), fl2: M(0xE06A7C), fl3: M(0xF3EEE0),
-    flag: M(0xE3A12F), gold: M(0xE8B53A, { metalness: 0.55, roughness: 0.3, emissive: 0x6B4A10, emissiveIntensity: 0.35 }), white: M(0xF2F2EE), steel2: M(0xB8C0C8), road: M(0x6E747B), paving: M(0xB9B0A0), snow: M(0xF4F6F8), rock: M(0x8A8F96), lamp: M(0xFFE0A0, { emissive: 0xFFC158, emissiveIntensity: 0 }),
+    flag: M(0xE3A12F), gold: M(0xE8B53A, { metalness: 0.55, roughness: 0.3, emissive: 0x6B4A10, emissiveIntensity: 0.35 }), white: M(0xF2F2EE), steel2: M(0xB8C0C8), road: M(0x6E747B), paving: M(0xB9B0A0), water: M(0x5FA8D3, { roughness: 0.15, metalness: 0.1, emissive: 0x1E4E6E, emissiveIntensity: 0.25 }), tower: M(0x8FB4CC, { roughness: 0.3, metalness: 0.2 }), tower2: M(0x6F90A8, { roughness: 0.35 }), snow: M(0xF4F6F8), rock: M(0x8A8F96), lamp: M(0xFFE0A0, { emissive: 0xFFC158, emissiveIntensity: 0 }),
     conBody: M(0x5B6470), conPanel: M(0x3E4550),
     conBtn: M(0xE0413A, { emissive: 0x8A1A12, emissiveIntensity: 0.25, roughness: 0.5 }),
     conLight: M(0x9BE36A, { emissive: 0x7DDC4A, emissiveIntensity: 0.2 }),
@@ -34,3 +34,18 @@ export type Materials = ReturnType<typeof createMaterials>;
 
 export const createBlueprintMaterial = () =>
   new THREE.LineBasicMaterial({ color: 0x6F97BD, transparent: true, opacity: 0.5 });
+
+export type RoofTheme = "red" | "green" | "blue" | "black";
+
+const ROOF_THEMES: Record<RoofTheme, [number, number]> = {
+  red: [0xA8452E, 0xB9543A], green: [0x3F7A4A, 0x4B8A56], blue: [0x2F5E8E, 0x3B6D9E], black: [0x3A3D42, 0x484C52],
+};
+
+/** Recolors every house's roof tiles (null restores each type's own colors). */
+export function applyRoofTheme(mat: Materials, theme: RoofTheme | null): void {
+  const pairs = [[mat.roof, mat.roof2], [mat.teal, mat.teal2], [mat.shingle, mat.shingle2]] as const;
+  pairs.forEach(pair => pair.forEach((m, i) => {
+    m.userData.base ??= m.color.getHex();
+    m.color.setHex(theme ? ROOF_THEMES[theme][i] : m.userData.base);
+  }));
+}

@@ -1,4 +1,6 @@
 import { REST_FOR, REST_MAX, REST_MIN, SNOOZE_FOR, TIRED_AFTER } from "./constants";
+import { logEvent } from "./log";
+import { earn, REWARD } from "./wallet";
 import { runningTimers, togglePause } from "./timer";
 import type { AppState, Rest, WorkLog } from "./types";
 
@@ -48,6 +50,9 @@ export function endRest(s: AppState, now = Date.now()): void {
   const r = s.rest;
   if (!r) return;
   s.rest = null;
+  const took = Math.max(0, now - r.start);
+  logEvent(s, { kind: "rest", ms: took }, now);
+  if (took >= REWARD.restMin) earn(s, REWARD.rest, "rest", now);
   s.work = freshWork();
   s.timers.forEach(tm => { if (r.resume.includes(tm.taskId) && tm.paused != null) togglePause(tm, now); });
   syncWork(s, now);

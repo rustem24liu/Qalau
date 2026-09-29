@@ -1,4 +1,4 @@
-import { builtCount, KINDS, type Goal, type GoalType } from "@qalau/core";
+import { builtCount, KINDS, NEGLECT_LABEL, neglectOf, type Goal, type GoalType } from "@qalau/core";
 import { useState } from "react";
 import { scene } from "../lib/scene";
 import { useActiveGoal, useStore } from "../store";
@@ -47,6 +47,7 @@ function Lot({ goal: g, night, pressed, onClick }: { goal: Goal; night: boolean;
   const k = builtCount(g, scene.pieceCount(g.type));
   const thumb = scene.thumb(g.type, k, night);
   const done = g.tasks.filter(t => t.done).length;
+  const neglect = useStore(s => neglectOf(s.state, g));
   return (
     <button className="lot" type="button" aria-pressed={pressed} onClick={onClick}>
       <span className="th">
@@ -54,6 +55,7 @@ function Lot({ goal: g, night, pressed, onClick }: { goal: Goal; night: boolean;
         {thumb?.kind === "svg" && <span dangerouslySetInnerHTML={{ __html: thumb.markup }} />}
       </span>
       <span className="nm">{g.title || "Без названия"}</span>
+      {neglect > 0 && <span className={"neglect-tag n" + neglect}>{NEGLECT_LABEL[neglect]}</span>}
       <span className="pc">
         {KINDS[g.type].house} · {done}/{g.tasks.length}
         {g.type === "daily" && ` · серия ${g.streak || 0}`}

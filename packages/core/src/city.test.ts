@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cityPoints, LANDMARK_TASKS, landmarkFor, landmarkProgress, makeCity } from "./city";
+import { freshWallet } from "./wallet";
+import { CITY_LEVELS, cityLevel, cityPoints, LANDMARK_TASKS, landmarkFor, landmarkProgress, levelProgress, makeCity } from "./city";
 import { newGoal, normalize } from "./goals";
 import type { AppState, Goal } from "./types";
 
-const state = (...goals: Goal[]): AppState => ({ goals, timers: [], work: { acc: 0, from: null, stoppedAt: null, promptAt: 1 } });
+const state = (...goals: Goal[]): AppState => ({ goals, timers: [], work: { acc: 0, from: null, stoppedAt: null, promptAt: 1 }, log: [], wallet: freshWallet() });
 const withTasks = (type: Goal["type"], done: boolean[], extra: Partial<Goal> = {}): Goal =>
   ({ ...newGoal(type, ""), tasks: done.map((d, i) => ({ id: "t" + i, text: "", done: d })), ...extra });
 
@@ -53,5 +54,24 @@ describe("normalize city", () => {
     s.city = { name: " ", landmark: "townhall" };
     normalize(s);
     expect(s.city).toBeNull();
+  });
+});
+
+describe("city levels", () => {
+  it("grows with points", () => {
+    expect(CITY_LEVELS[cityLevel(0)].name).toBe("Посёлок");
+    expect(CITY_LEVELS[cityLevel(14)].name).toBe("Посёлок");
+    expect(CITY_LEVELS[cityLevel(15)].name).toBe("Городок");
+    expect(CITY_LEVELS[cityLevel(10_000)].name).toBe("Мегаполис");
+  });
+
+  it("levels need more and more work", () => {
+    const steps = CITY_LEVELS.slice(1).map((l, i) => l.from - CITY_LEVELS[i].from);
+    expect(steps).toEqual([...steps].sort((a, b) => a - b));
+  });
+
+  it("reports progress to the next level", () => {
+    expect(levelProgress(20)).toEqual({ level: 1, into: 5, need: 25 });
+    expect(levelProgress(500)).toMatchObject({ level: CITY_LEVELS.length - 1, need: null });
   });
 });

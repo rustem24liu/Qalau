@@ -1,7 +1,7 @@
 import type { Landmark } from "@qalau/core";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { CELL, CityScene, citySize, cityRings, lotPositions, type CityLot } from "./city";
+import { CELL, CityScene, citySize, cityRings, lotPositions, PERK_LEVEL, type CityLot } from "./city";
 import { houseConfigs } from "./houseConfig";
 import { buildLandmark } from "./landmarks";
 import { createBlueprintMaterial, createMaterials } from "./materials";
@@ -68,15 +68,15 @@ describe("CityScene", () => {
 
   it("adds, rebuilds and removes houses as goals change", () => {
     const c = make();
-    c.update({ landmark: "townhall", progress: 0, lots: [lot("a"), lot("b")] });
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot("a"), lot("b")] });
     expect(houses(c)).toBe(2);
-    c.update({ landmark: "townhall", progress: 0, lots: [lot("a", 0, "daily")] });
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot("a", 0, "daily")] });
     expect(houses(c)).toBe(1);
   });
 
   it("shows built pieces of each house and of the landmark", () => {
     const c = make();
-    c.update({ landmark: "baiterek", progress: 0.5, lots: [lot("a", 10)] });
+    c.update({ landmark: "baiterek", progress: 0.5, level: 0, lots: [lot("a", 10)] });
     const lm = buildLandmark("baiterek", mat, prim);
     const landmark = c.group.children.find(o => o.children.length === lm.pieces.length)!;
     const shown = landmark.children.filter(o => o.visible).length;
@@ -85,7 +85,7 @@ describe("CityScene", () => {
 
   it("an empty city still shows the landmark's base", () => {
     const c = make();
-    c.update({ landmark: "koktobe", progress: 0, lots: [] });
+    c.update({ landmark: "koktobe", progress: 0, level: 0, lots: [] });
     const n = buildLandmark("koktobe", mat, prim).pieces.length;
     const lm = c.group.children.find(o => o.children.length === n)!;
     expect(lm.children.filter(o => o.visible)).toHaveLength(1);
@@ -93,9 +93,80 @@ describe("CityScene", () => {
 
   it("grows the ground with the number of houses", () => {
     const c = make();
-    c.update({ landmark: "townhall", progress: 0, lots: [lot("a")] });
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot("a")] });
     const small = c.size;
-    c.update({ landmark: "townhall", progress: 0, lots: Array.from({ length: 20 }, (_, i) => lot("g" + i)) });
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: Array.from({ length: 20 }, (_, i) => lot("g" + i)) });
     expect(c.size).toBeGreaterThan(small);
+  });
+});
+
+describe("level perks", () => {
+  const make = () => new CityScene(new THREE.Group(), mat, createBlueprintMaterial(), prim, houseConfigs(mat));
+  const count = (c: CityScene, m: THREE.Material) => {
+    let n = 0;
+    c.group.visible = true;
+    c.group.traverseVisible(o => { if ((o as THREE.Mesh).material === m) n++; }); // skip unbuilt house pieces
+    return n;
+  };
+  const at = (level: number) => {
+    const c = make();
+    c.update({ landmark: "townhall", progress: 0, level, lots: [{ id: "a", type: "big", k: 0 }] });
+    return c;
+  };
+
+  it("a village has none", () => {
+    const c = at(0);
+    expect(count(c, mat.lamp)).toBe(0);
+    expect(count(c, mat.water)).toBe(0);
+  });
+
+  it("each level adds its perk and keeps the earlier ones", () => {
+    expect(count(at(PERK_LEVEL.lamps), mat.lamp)).toBeGreaterThan(10);
+    const park = at(PERK_LEVEL.park);
+    expect(count(park, mat.lamp)).toBeGreaterThan(10);
+    expect(count(park, mat.leaf)).toBeGreaterThan(count(at(PERK_LEVEL.lamps), mat.leaf));
+    expect(count(at(PERK_LEVEL.fountain), mat.water)).toBeGreaterThan(0);
+    const mega = at(PERK_LEVEL.towers);
+    expect(count(mega, mat.tower)).toBeGreaterThan(0);
+    expect(count(mega, mat.water)).toBeGreaterThan(0);
+  });
+
+  it("builds on free lots only, never on a goal's house", () => {
+    const c = make();
+    const lots = Array.from({ length: 16 }, (_, i) => ({ id: "g" + i, type: "big" as const, k: 0 })); // every lot of 2 rings taken
+    c.update({ landmark: "townhall", progress: 0, level: PERK_LEVEL.towers, lots });
+    expect(count(c, mat.tower)).toBe(0);
+  });
+});
+
+describe("neglect and shop decorations", () => {
+  const make = () => new CityScene(new THREE.Group(), mat, createBlueprintMaterial(), prim, houseConfigs(mat));
+  const visibleCount = (c: CityScene, m: THREE.Material) => {
+    let n = 0;
+    c.group.visible = true;
+    c.group.traverseVisible(o => { if ((o as THREE.Mesh).material === m) n++; });
+    return n;
+  };
+
+  it("overgrown and abandoned houses show weeds and a sign", () => {
+    const c = make();
+    const lot = (neglect: number) => ({ id: "a", type: "big" as const, k: 20, neglect });
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot(0)] });
+    const tidy = visibleCount(c, mat.grass2);
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot(1)] });
+    expect(visibleCount(c, mat.grass2)).toBeGreaterThan(tidy);
+    expect(visibleCount(c, mat.wood3)).toBe(0);
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [lot(2)] });
+    expect(visibleCount(c, mat.wood3)).toBeGreaterThan(0);
+  });
+
+  it("places each bought decoration", () => {
+    const c = make();
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [], decor: [] });
+    const before = visibleCount(c, mat.gold);
+    c.update({ landmark: "townhall", progress: 0, level: 0, lots: [], decor: ["statue", "benches", "flowers", "flags"] });
+    expect(visibleCount(c, mat.gold)).toBeGreaterThan(before);
+    expect(visibleCount(c, mat.fl2)).toBeGreaterThan(0);
+    expect(visibleCount(c, mat.flag)).toBeGreaterThan(0);
   });
 });

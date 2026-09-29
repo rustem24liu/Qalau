@@ -24,6 +24,10 @@ export interface House {
   dims: { hx: number; hz: number; IX: number; IZ: number };
   /** Builder's bed: he walks to `foot`, then lies down toward -z at height `top`. */
   bed: { foot: THREE.Vector3; top: number };
+  /** Tall grass for a goal left alone for two weeks (see setNeglect). */
+  weeds: THREE.Group;
+  /** "Abandoned" sign for a goal left alone for a month. */
+  sign: THREE.Group;
   /** Where the builder waits, and the control console he presses. */
   idle: THREE.Vector3;
   cpos: THREE.Vector3;
@@ -189,6 +193,27 @@ export function buildHouse(
   fin.push(box(0.12, 1.8, 0.12, mat.ridge, lx, 0.9, lz), box(0.32, 0.32, 0.32, mat.lamp, lx, 1.95, lz));
   piece(6, ...fin);
 
+  // ---- neglect: tall grass around and inside the footprint, and a boarded-up sign ----
+  const weeds = new THREE.Group();
+  for (let i = 0; i < 90; i++) {
+    // deterministic scatter: a ring round the walls plus a few tufts inside
+    const a = i * 2.39996, inside = i % 5 === 0;
+    const rr = inside ? 0.5 + (i % 3) * 0.35 : 1 + 0.18 * (i % 4);
+    const x = Math.cos(a) * (hx * rr + (inside ? 0 : 0.3)), z = Math.sin(a) * (hz * rr + (inside ? 0 : 0.3));
+    const h = 0.35 + 0.22 * ((i * 7) % 5);
+    weeds.add(box(0.16, h, 0.16, i % 3 ? mat.grass2 : mat.leaf, x, h / 2, z), box(0.13, h * 0.7, 0.13, mat.grass, x + 0.15, (h * 0.7) / 2, z + 0.09),
+      box(0.12, h * 0.55, 0.12, mat.leaf2, x - 0.13, (h * 0.55) / 2, z - 0.08));
+  }
+  weeds.visible = false;
+  grp.add(weeds);
+  const sign = new THREE.Group();
+  const sx = dr.c + dr.w / 2 + 0.9, sz = hz + 1.5;
+  sign.add(box(0.12, 1.4, 0.12, mat.wood2, sx, 0.7, sz), box(1.1, 0.6, 0.08, mat.wood3, sx, 1.25, sz + 0.07));
+  const plank = (r: number) => { const p = box(1.2, 0.1, 0.06, mat.brick, sx, 1.25, sz + 0.13); p.rotation.z = r; return p; };
+  sign.add(plank(0.45), plank(-0.45));
+  sign.visible = false;
+  grp.add(sign);
+
   // ---- builder's camp (static): bed and nightstand right of the house (the side facing the camera) ----
   const bedX = hx + 2.4, bedL = 2.3, bedW = 1.15, legH = 0.3, matTop = legH + 0.32;
   const camp = new THREE.Group();
@@ -231,6 +256,13 @@ export function buildHouse(
     warmPos: new THREE.Vector3(dr.c, y0 + 1.8, hz + 1.1),
     dims: { hx, hz, IX, IZ },
     bed: { foot: new THREE.Vector3(bedX, 0, bedL / 2 - 0.05), top: matTop },
+    weeds, sign,
     idle, cpos, btn, btnY: 0.7,
   };
+}
+
+/** 0 — tidy, 1 — overgrown, 2 — overgrown and marked abandoned. */
+export function setNeglect(h: House, n: number): void {
+  h.weeds.visible = n >= 1;
+  h.sign.visible = n >= 2;
 }

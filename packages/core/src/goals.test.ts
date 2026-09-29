@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { freshWallet } from "./wallet";
 import { activeGoal, exampleState, markDone, moveTask, newGoal, normalize, rollDaily, setPriority, sortByPriority } from "./goals";
 import type { AppState, Goal, Priority, Task, Timer } from "./types";
 
@@ -13,7 +14,7 @@ const daily = (o: Partial<Goal> = {}): Goal => ({
   id: "d", type: "daily", title: "", day: TODAY, built: 0, streak: 0,
   tasks: [{ id: "a", text: "", done: false }, { id: "b", text: "", done: false }], ...o,
 });
-const stateOf = (...goals: Goal[]): AppState => ({ goals, timers: [], work: { acc: 0, from: null, stoppedAt: null, promptAt: 1 } });
+const stateOf = (...goals: Goal[]): AppState => ({ goals, timers: [], work: { acc: 0, from: null, stoppedAt: null, promptAt: 1 }, log: [], wallet: freshWallet() });
 
 describe("newGoal", () => {
   it("gives daily goals a day and zero counters", () => {

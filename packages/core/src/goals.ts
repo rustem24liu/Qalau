@@ -1,13 +1,15 @@
 import { isLandmark, landmarkFor } from "./city";
 import { isGoalType, isPriority, PRIORITIES } from "./constants";
+import { logEvent, pruneLog } from "./log";
 import { freshWork } from "./rest";
-import { today, yesterday } from "./date";
+import { daysAgo, today, yesterday } from "./date";
+import { earn, freshWallet, normalizeWallet, REWARD, rewardTask } from "./wallet";
 import type { AppState, Goal, GoalType, Priority, Task } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function newGoal(type: GoalType, title: string): Goal {
-  const g: Goal = { id: uid(), type, title, tasks: [] };
+  const g: Goal = { id: uid(), type, title, tasks: [], createdAt: Date.now() };
   if (type === "daily") Object.assign(g, { day: today(), built: 0, streak: 0 });
   return g;
 }
@@ -22,6 +24,8 @@ export function exampleState(): AppState {
     activeId: a,
     timers: [],
     work: freshWork(),
+    log: [],
+    wallet: freshWallet(),
     goals: [
       {
         id: a, type: "big", title: "Запустить свой пет-проект", tasks: [
@@ -41,7 +45,7 @@ export function exampleState(): AppState {
       },
     ],
   };
-  state.goals.forEach(sortByPriority); // finished example tasks sit at the bottom, like real ones
+  state.goals.forEach(g => { sortByPriority(g); g.createdAt = Date.now(); }); // finished example tasks sit at the bottom, like real ones
   return state;
 }
 
@@ -53,11 +57,15 @@ export function normalize(state: AppState): void {
   if (!Array.isArray(state.timers)) state.timers = state.timer ? [state.timer] : [];
   delete state.timer;
   if (!state.work) state.work = freshWork();
+  if (!Array.isArray(state.log)) state.log = [];
+  pruneLog(state);
+  normalizeWallet(state);
   if (state.city && (typeof state.city.name !== "string" || !state.city.name.trim())) state.city = null;
   else if (state.city && !isLandmark(state.city.landmark)) state.city.landmark = landmarkFor(state.city.name);
   state.goals.forEach(g => {
     if (!isGoalType(g.type)) g.type = "big";
     if (!Array.isArray(g.tasks)) g.tasks = [];
+    if (typeof g.createdAt !== "number") g.createdAt = Date.now();
     g.tasks.forEach(t => { if (t.priority !== undefined && !isPriority(t.priority)) delete t.priority; });
     sortByPriority(g);
   });
@@ -81,8 +89,15 @@ export function rollDaily(state: AppState): boolean {
       g.day = t;
       changed = true;
     } else if (g.day !== t) {
-      if (g.lastBuilt !== yesterday() && g.lastBuilt !== t) g.streak = 0;
-      g.tasks.forEach(x => { x.done = false; });
+      if (g.lastBuilt !== yesterday() && g.lastBuilt !== t) {
+        // one missed day can be covered by a streak freeze
+        if (g.lastBuilt === daysAgo(2) && (g.streak || 0) > 0 && state.wallet?.freezes > 0) {
+          state.wallet.freezes--;
+          g.lastBuilt = yesterday();
+          logEvent(state, { kind: "freeze_used", goalId: g.id });
+        } else g.streak = 0;
+      }
+      g.tasks.forEach(x => { x.done = false; delete x.rewarded; }); // a new day pays again
       sortByPriority(g); // yesterday's finished tasks come back into their priority groups
       g.day = t;
       changed = true;
@@ -116,14 +131,19 @@ export function sortByPriority(g: Goal): void {
 }
 
 /** Checks/unchecks a task, stops its timer and counts daily streaks. Mutates. */
-export function markDone(state: AppState, g: Goal, t: Task, val: boolean): void {
+export function markDone(state: AppState, g: Goal, t: Task, val: boolean, now = Date.now()): void {
   // a just-finished task goes to the very bottom (sorting is stable, so it stays last among done ones)
   if (val && !t.done && g.tasks.includes(t)) g.tasks = [...g.tasks.filter(x => x !== t), t];
+  if (t.done !== val) logEvent(state, { kind: val ? "task_done" : "task_undone", goalId: g.id, taskId: t.id }, now);
   t.done = val;
+  if (val) rewardTask(state, t, now);
   state.timers = state.timers.filter(tm => tm.taskId !== t.id);
   if (g.type === "daily" && g.tasks.length && g.tasks.every(x => x.done) && g.lastBuilt !== today()) {
     g.streak = g.lastBuilt === yesterday() ? (g.streak || 0) + 1 : 1;
     g.built = (g.built || 0) + 1;
     g.lastBuilt = today();
+    logEvent(state, { kind: "hut_built", goalId: g.id }, now);
+    earn(state, REWARD.hut, "hut", now);
+    if (g.streak % 7 === 0) earn(state, REWARD.streakWeek, "streak", now);
   }
 }

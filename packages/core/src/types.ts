@@ -7,6 +7,8 @@ export interface Task {
   text: string;
   done: boolean;
   priority?: Priority;
+  /** Coins were paid for finishing it (once per task; daily tasks once per day). */
+  rewarded?: boolean;
   /** Time spent via timer / stopwatch, ms. */
   spent?: number;
 }
@@ -16,6 +18,8 @@ export interface Goal {
   type: GoalType;
   title: string;
   tasks: Task[];
+  /** Epoch ms; for goals made before the journal existed, when they were first seen by it. */
+  createdAt?: number;
   // daily goals only
   day?: string;
   built?: number;
@@ -56,6 +60,8 @@ export interface Rest {
 }
 
 import type { City } from "./city";
+import type { LogEvent } from "./log";
+import type { Wallet } from "./wallet";
 
 export interface AppState {
   goals: Goal[];
@@ -66,8 +72,12 @@ export interface AppState {
   timers: Timer[];
   work: WorkLog;
   rest?: Rest | null;
+  /** Journal of what happened, newest last (see log.ts). */
+  log: LogEvent[];
   /** The user's home city; asked the first time the city view opens. */
   city?: City | null;
+  /** Coins and what they bought. */
+  wallet: Wallet;
   /** @deprecated single timer from before parallel tasks; migrated by normalize(). */
   timer?: Timer | null;
 }

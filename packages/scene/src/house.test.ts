@@ -43,3 +43,14 @@ it("bigger goals get bigger buildings", () => {
   expect(build("big").N).toBeGreaterThan(build("medium").N);
   expect(build("medium").N).toBeGreaterThan(build("daily").N);
 });
+
+describe("roof themes", () => {
+  it("recolors roofs and restores them", async () => {
+    const { applyRoofTheme } = await import("./materials");
+    const m = createMaterials(), before = m.teal.color.getHex();
+    applyRoofTheme(m, "red");
+    expect(m.teal.color.getHex()).not.toBe(before);
+    applyRoofTheme(m, null);
+    expect(m.teal.color.getHex()).toBe(before);
+  });
+});

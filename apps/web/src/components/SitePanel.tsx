@@ -1,4 +1,4 @@
-import { isTired, runningTimers } from "@qalau/core";
+import { isTired, neglectOf, runningTimers } from "@qalau/core";
 import { useLiveProgress } from "../hooks/useLiveProgress";
 import { useDayPhase } from "../hooks/useWeatherSync";
 import { useActiveGoal, useStore } from "../store";
@@ -14,6 +14,7 @@ export function SitePanel({ night }: { night: boolean }) {
   const goal = useActiveGoal();
   const timers = useStore(s => s.state.timers);
   const rest = useStore(s => s.state.rest);
+  const neglect = useStore(s => neglectOf(s.state, goal));
   const tired = useStore(s => isTired(s.state, s.now));
   const cheer = useCheer();
   const mood: BubbleMode = rest ? "rest" : tired ? "tired" : cheer ? "cheer" : null;
@@ -25,7 +26,7 @@ export function SitePanel({ night }: { night: boolean }) {
 
   return (
     <div className="site">
-      <SceneView goal={goal} k={k} N={N} night={dark} workers={workers} mood={mood} />
+      <SceneView goal={goal} k={k} N={N} night={dark} workers={workers} mood={mood} neglect={neglect} />
       {rest ? <RestBox rest={rest} /> : <RestLauncher />}
       {timers.length > 0 && (
         <div className={"timers" + (timers.length > 1 ? " multi" : "")}>

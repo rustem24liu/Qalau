@@ -1,5 +1,5 @@
 import {
-  activeGoal, elapsed, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
+  activeGoal, buy, CITY_LEVELS, cityLevel, cityPoints, earn, elapsed, focusCoins, logEvent, payLevels, REWARD, setRoof, touchGoal, type BuyResult, type RoofId, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setPriority, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
   type AppState, type Goal, type GoalType, type Priority, type Timer,
 } from "@qalau/core";
 import { create } from "zustand";
@@ -12,8 +12,8 @@ interface Store {
   toast: { id: number; text: string } | null;
   /** Bumped when a break ends — the builder cheers. */
   cheer: number;
-  /** Screen: one goal's building site, or the whole city. Not saved. */
-  view: "site" | "city";
+  /** Screen: one goal's building site, the whole city, or the shop. Not saved. */
+  view: "site" | "city" | "shop";
 
   tick(): void;
   showToast(text: string): void;
@@ -22,7 +22,11 @@ interface Store {
   /** Reset daily goals if the date changed. */
   rollDay(): void;
 
-  setView(view: "site" | "city"): void;
+  setView(view: "site" | "city" | "shop"): void;
+  buy(itemId: string): BuyResult;
+  setRoof(roof: RoofId | null): void;
+  /** "I'll come back to it" for a neglected goal. */
+  touchGoal(goalId: string): void;
   /** Saves the user's city from their answer; false if the answer is empty. */
   setCity(name: string): boolean;
   /** From the city: open a goal's building site. */
@@ -78,13 +82,18 @@ export const useStore = create<Store>()((set, get) => ({
   showToast: text => set({ toast: { id: Date.now(), text } }),
 
   update(fn) {
-    const next = structuredClone(get().state);
+    const prev = get().state;
+    const next = structuredClone(prev);
     fn(next);
     delete next.example;
     normalize(next);
     syncWork(next);
+    const was = cityLevel(cityPoints(prev)), is = cityLevel(cityPoints(next));
+    payLevels(next, is);
     saveState(next);
     set({ state: next, now: Date.now() });
+    // the city reached a new level
+    if (is > was && !prev.example) get().showToast(`Город вырос: теперь это ${CITY_LEVELS[is].name}! Открыто: ${CITY_LEVELS[is].perk.toLowerCase()} · +${REWARD.level} монет`);
   },
 
   rollDay() {
@@ -95,6 +104,16 @@ export const useStore = create<Store>()((set, get) => ({
   },
 
   setView: view => set({ view }),
+
+  buy(itemId) {
+    let res: BuyResult = "unknown";
+    get().update(s => { res = buy(s, itemId); });
+    return res;
+  },
+
+  setRoof: roof => get().update(s => setRoof(s, roof)),
+
+  touchGoal: goalId => get().update(s => touchGoal(s, goalId)),
 
   setCity(name) {
     const city = makeCity(name);
@@ -112,6 +131,7 @@ export const useStore = create<Store>()((set, get) => ({
   addGoal: type => get().update(s => {
     const g = newGoal(type, type === "daily" ? "Мой день" : "Новая цель");
     s.goals.push(g);
+    logEvent(s, { kind: "goal_created", goalId: g.id });
     s.activeId = g.id;
   }),
 
@@ -129,7 +149,11 @@ export const useStore = create<Store>()((set, get) => ({
     if (type === "daily" && !g.day) Object.assign(g, { day: today(), built: g.built || 0, streak: g.streak || 0 });
   })),
 
-  addTask: text => get().update(withActive(g => { g.tasks.push(newTask(text)); })),
+  addTask: text => get().update(withActive((g, s) => {
+    const t = newTask(text);
+    g.tasks.push(t);
+    logEvent(s, { kind: "task_added", goalId: g.id, taskId: t.id });
+  })),
 
   removeTask: id => get().update(withActive((g, s) => {
     s.timers = s.timers.filter(tm => tm.taskId !== id);
@@ -172,6 +196,8 @@ export const useStore = create<Store>()((set, get) => ({
       const g = s.goals.find(x => x.id === tm.goalId), t = g?.tasks.find(x => x.id === tm.taskId);
       if (!g || !t) return;
       t.spent = (t.spent || 0) + spent;
+      logEvent(s, { kind: "focus", goalId: g.id, taskId: t.id, ms: spent });
+      earn(s, focusCoins(spent), "focus");
       markDone(s, g, t, true);
     });
     if (task) get().showToast(tm.mode === "down" && !early ? `Время вышло — «${task.text}» построена!` : `«${task.text}» — готово за ${fmtDur(spent)}!`);

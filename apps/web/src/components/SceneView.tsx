@@ -14,14 +14,17 @@ interface Props {
   workers: number;
   /** Builder's fatigue state, shown as a speech cloud. */
   mood: BubbleMode;
+  /** 0 tidy, 1 overgrown, 2 abandoned. */
+  neglect: number;
 }
 
 /** The "sky" box hosting the 3D (or SVG) building. */
-export function SceneView({ goal, k, N, night, workers, mood }: Props) {
+export function SceneView({ goal, k, N, night, workers, mood, neglect }: Props) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => scene.mount(host.current!), []);
   useEffect(() => scene.show(goal.id, goal.type, k), [goal.id, goal.type, k]);
+  useEffect(() => scene.setNeglect(neglect), [goal.id, goal.type, neglect]); // the building is shared per type: re-apply on switch
   useEffect(() => scene.setWorkers(workers), [workers]);
   useEffect(() => scene.setNight(night), [night]);
   useEffect(() => scene.setMood(mood ?? "normal"), [mood]);

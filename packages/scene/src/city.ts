@@ -1,6 +1,6 @@
 import type { GoalType, Landmark } from "@qalau/core";
 import * as THREE from "three";
-import { buildHouse, type House } from "./house";
+import { buildHouse, setNeglect, type House } from "./house";
 import type { HouseConfig } from "./houseConfig";
 import { buildLandmark, type LandmarkModel } from "./landmarks";
 import type { Materials } from "./materials";
@@ -12,6 +12,8 @@ export interface CityLot {
   type: GoalType;
   /** Pieces built. */
   k: number;
+  /** 0 tidy, 1 overgrown, 2 abandoned. */
+  neglect?: number;
 }
 
 export interface CityView {
@@ -19,7 +21,14 @@ export interface CityView {
   /** 0..1 of the landmark built. */
   progress: number;
   lots: CityLot[];
+  /** City level (index into CITY_LEVELS): 1 lamps, 2 park, 3 fountain, 4 skyscrapers. */
+  level: number;
+  /** Bought plaza decorations: "benches" | "flowers" | "flags" | "statue". */
+  decor?: string[];
 }
+
+/** Level at which each kind of decoration appears. */
+export const PERK_LEVEL = { lamps: 1, park: 2, fountain: 3, towers: 4 } as const;
 
 /** Lot size in world units; the landmark plaza takes the middle 3×3 lots. */
 export const CELL = 10;
@@ -59,6 +68,8 @@ export class CityScene {
   readonly group = new THREE.Group();
   private ground: THREE.Group | null = null;
   private groundKey = "";
+  private decor: THREE.Group | null = null;
+  private decorKey = "";
   private rings = MIN_RINGS;
   /** Extra ground behind the city (Almaty's foothills). */
   private back = 0;
@@ -85,6 +96,7 @@ export class CityScene {
     this.rings = cityRings(view.lots.length);
     this.buildGround(view.landmark);
     this.showLandmark(view.landmark, view.progress);
+    this.buildDecor(view.level, view.lots.length, view.decor ?? []);
 
     const pos = lotPositions(view.lots.length);
     const keep = new Set(view.lots.map(l => l.id));
@@ -101,6 +113,7 @@ export class CityScene {
       }
       lot.house.grp.position.set(pos[i].x, 0, pos[i].z);
       lot.house.pieces.forEach((p, j) => { p.obj.visible = j < l.k; p.obj.position.y = 0; });
+      setNeglect(lot.house, l.neglect ?? 0);
     });
   }
 
@@ -115,6 +128,87 @@ export class CityScene {
     // the base is always there, so an empty plaza still shows where the landmark will rise
     const k = Math.max(1, Math.floor(progress * lm.pieces.length));
     lm.pieces.forEach((p, i) => { p.visible = i < k; });
+  }
+
+  /** Level perks: street lamps, a park on free lots, a fountain, skyscrapers on the outskirts. */
+  private buildDecor(level: number, used: number, bought: string[]) {
+    const key = [level, used, this.rings, ...bought].join("|");
+    if (key === this.decorKey) return;
+    if (this.decor) this.group.remove(this.decor);
+    this.decorKey = key;
+    const { box, blob } = this.prim, m = this.mat, g = new THREE.Group(), r = this.rings;
+    const plaza = 1.5 * CELL;
+
+    if (level >= PERK_LEVEL.lamps) {
+      for (let i = -r; i <= r + 1; i++) {
+        for (let j = -r; j <= r + 1; j++) {
+          const x = (i - 0.5) * CELL + 1, z = (j - 0.5) * CELL + 1; // on the corner, beside the crossing
+          if (Math.abs(x) < plaza && Math.abs(z) < plaza) continue;
+          g.add(box(0.16, 2.2, 0.16, m.ridge, x, 1.1, z), box(0.4, 0.4, 0.4, m.lamp, x, 2.35, z));
+        }
+      }
+    }
+    const free = lotPositions((2 * r + 1) ** 2 - 9).slice(used);
+    free.forEach(({ x, z }) => {
+      // outer ring, on the far side from the camera, so towers never hide the houses
+      const outskirts = Math.max(Math.abs(x), Math.abs(z)) === r * CELL && x + z < 0;
+      if (level >= PERK_LEVEL.towers && outskirts) {
+        // a glass tower, height varied by position
+        const h = 8 + (Math.abs(x * 7 + z * 13) % 9);
+        g.add(box(5, h, 5, m.tower, x, h / 2, z), box(5.3, 0.4, 5.3, m.tower2, x, h * 0.5, z), box(5.3, 0.4, 5.3, m.tower2, x, h, z));
+      } else if (level >= PERK_LEVEL.park) {
+        ([[-2, -1.5, 1.3], [2.2, 1, 1.1], [-0.5, 2.6, 0.9], [1.4, -2.4, 1]] as const).forEach(([dx, dz, s]) =>
+          g.add(box(0.3, 1.2 * s, 0.3, m.trunk, x + dx, 0.6 * s, z + dz), blob(1.1 * s, m.leaf, x + dx, 1.7 * s, z + dz)));
+        g.add(box(3.6, 0.03, 0.7, m.stone, x, 0.02, z)); // a path through the park
+      }
+    });
+    if (level >= PERK_LEVEL.fountain) {
+      const fx = CELL * 1.05, fz = CELL * 1.05; // plaza corner facing the camera
+      const cyl = (rt: number, rb: number, h: number, mm: THREE.Material, y: number) => {
+        const c = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 20), mm);
+        c.position.set(fx, y + h / 2, fz);
+        c.castShadow = c.receiveShadow = true;
+        return c;
+      };
+      g.add(cyl(2.4, 2.6, 0.6, m.stone, 0), cyl(2.1, 2.1, 0.08, m.water, 0.5), cyl(0.3, 0.4, 1.6, m.stone, 0.5),
+        cyl(1.0, 0.5, 0.35, m.stone, 2.1), cyl(0.85, 0.85, 0.06, m.water, 2.4), cyl(0.12, 0.12, 0.9, m.water, 2.4));
+    }
+    this.addBought(g, bought);
+    this.decor = g;
+    this.group.add(g);
+  }
+
+  /** Decorations bought in the shop, placed on and around the plaza. */
+  private addBought(g: THREE.Group, bought: string[]) {
+    const { box } = this.prim, m = this.mat, edge = 1.5 * CELL - 1.6;
+    if (bought.includes("benches")) {
+      // one bench on each side of the plaza, facing the landmark (a bench faces local +z)
+      ([[5, edge, Math.PI], [-5, -edge, 0], [edge, -5, -Math.PI / 2], [-edge, 5, Math.PI / 2]] as const).forEach(([x, z, rot]) => {
+        const b = new THREE.Group();
+        b.add(box(2.4, 0.14, 0.6, m.wood, 0, 0.55, 0), box(2.4, 0.6, 0.12, m.wood2, 0, 0.9, -0.3));
+        [-1, 1].forEach(sd => b.add(box(0.12, 0.55, 0.5, m.ridge, sd * 1.05, 0.28, 0)));
+        b.position.set(x, 0, z);
+        b.rotation.y = rot;
+        g.add(b);
+      });
+    }
+    if (bought.includes("flowers")) {
+      ([[-1, -1], [1, -1], [-1, 1]] as const).forEach(([sx, sz]) => {
+        const x = sx * (edge - 0.6), z = sz * (edge - 0.6);
+        g.add(box(3, 0.35, 3, m.stone, x, 0.18, z), box(2.6, 0.12, 2.6, m.dirt, x, 0.38, z));
+        for (let i = 0; i < 9; i++) g.add(box(0.4, 0.4, 0.4, [m.fl1, m.fl2, m.fl3][i % 3], x - 0.8 + (i % 3) * 0.8, 0.6, z - 0.8 + Math.floor(i / 3) * 0.8));
+      });
+    }
+    if (bought.includes("flags")) {
+      const spots = [-1, 0, 1].flatMap(a => [[a * edge, edge + 0.9], [a * edge, -edge - 0.9], [edge + 0.9, a * edge], [-edge - 0.9, a * edge]]);
+      spots.forEach(([x, z], i) => g.add(box(0.12, 4, 0.12, m.ridge, x, 2, z), box(1.2, 0.7, 0.05, [m.flag, m.brick, m.teal2][i % 3], x + 0.62, 3.5, z)));
+    }
+    if (bought.includes("statue")) {
+      const x = -CELL * 1.05, z = CELL * 1.05, s = 2.2; // plaza corner facing the camera, opposite the fountain
+      g.add(box(2.4, 1.2, 2.4, m.stone, x, 0.6, z), box(2, 0.2, 2, m.white, x, 1.3, z));
+      g.add(box(0.44 * s, 0.9 * s, 0.3 * s, m.gold, x, 1.4 + 0.45 * s, z), box(0.32 * s, 0.32 * s, 0.32 * s, m.gold, x, 1.4 + 1.08 * s, z),
+        box(0.46 * s, 0.1 * s, 0.46 * s, m.gold, x, 1.4 + 1.27 * s, z), box(0.12 * s, 0.6 * s, 0.12 * s, m.gold, x + 0.3 * s, 1.4 + 1.2 * s, z));
+    }
   }
 
   private buildGround(kind: Landmark) {

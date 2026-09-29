@@ -1,5 +1,6 @@
 import {
-  builtCount, CITY_SUGGESTIONS, cityPoints, KINDS, LANDMARK_LABEL, LANDMARK_TASKS, landmarkProgress, type City,
+  builtCount, CITY_LEVELS, CITY_SUGGESTIONS, cityLevel, cityPoints, KINDS, LANDMARK_LABEL, LANDMARK_TASKS, landmarkProgress,
+  levelProgress, NEGLECT_LABEL, neglectOf, type City,
 } from "@qalau/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDayPhase } from "../hooks/useWeatherSync";
@@ -47,14 +48,18 @@ function CityScene({ night, city }: { night: boolean; city: City }) {
   const host = useRef<HTMLDivElement>(null);
   const goals = useStore(s => s.state.goals);
   const progress = useStore(s => landmarkProgress(s.state));
+  const level = useStore(s => cityLevel(cityPoints(s.state)));
+  const state = useStore(s => s.state);
   const phase = useDayPhase();
   const dark = night || phase === "night";
 
   const view = useMemo(() => ({
     landmark: city.landmark,
     progress,
-    lots: goals.map(g => ({ id: g.id, type: g.type, k: builtCount(g, scene.pieceCount(g.type)) })),
-  }), [city.landmark, progress, goals]);
+    level,
+    decor: state.wallet.owned,
+    lots: goals.map(g => ({ id: g.id, type: g.type, k: builtCount(g, scene.pieceCount(g.type)), neglect: neglectOf(state, g) })),
+  }), [city.landmark, progress, level, goals, state]);
 
   useEffect(() => scene.mount(host.current!), []);
   useEffect(() => scene.showCity(view), [view]);
@@ -75,6 +80,7 @@ function CityScene({ night, city }: { night: boolean; city: City }) {
 
 function CityInfo({ city, onChange }: { city: City; onChange(): void }) {
   const goals = useStore(s => s.state.goals);
+  const state = useStore(s => s.state);
   const points = useStore(s => cityPoints(s.state));
   const openGoal = useStore(s => s.openGoal);
   const done = Math.min(points, LANDMARK_TASKS);
@@ -90,6 +96,8 @@ function CityInfo({ city, onChange }: { city: City; onChange(): void }) {
         <button className="btn ghost" type="button" onClick={onChange}>Сменить город</button>
       </div>
 
+      <CityLevel points={points} />
+
       <div className="meter">
         <div className="meter-row">
           <span className="stage">{LANDMARK_LABEL[city.landmark]}{finished ? " построен!" : ""}</span>
@@ -103,12 +111,12 @@ function CityInfo({ city, onChange }: { city: City; onChange(): void }) {
         <div className="lbl">Дома · {goals.length}</div>
         <ul className="city-houses">
           {goals.map(g => {
-            const N = scene.pieceCount(g.type), k = builtCount(g, N), pct = Math.round((k / N) * 100);
+            const N = scene.pieceCount(g.type), k = builtCount(g, N), pct = Math.round((k / N) * 100), nl = neglectOf(state, g);
             return (
               <li key={g.id}>
                 <button type="button" onClick={() => openGoal(g.id)}>
                   <span className="nm">{g.title || "Без названия"}</span>
-                  <span className="pc">{KINDS[g.type].house} · {pct === 100 ? "построен" : `${pct}%`}</span>
+                  <span className="pc">{KINDS[g.type].house} · {pct === 100 ? "построен" : `${pct}%`}{nl ? ` · ${NEGLECT_LABEL[nl].toLowerCase()}` : ""}</span>
                   <span className="mini-bar"><i style={{ width: pct + "%" }} /></span>
                 </button>
               </li>
@@ -116,6 +124,27 @@ function CityInfo({ city, onChange }: { city: City; onChange(): void }) {
           })}
         </ul>
       </div>
+    </div>
+  );
+}
+
+/** City level: name, progress to the next one, and what each level unlocks. */
+function CityLevel({ points }: { points: number }) {
+  const { level, into, need } = levelProgress(points);
+  return (
+    <div className="city-level">
+      <div className="meter-row">
+        <span className="stage">{CITY_LEVELS[level].name}</span>
+        <span className="count">{need ? `${into}/${need} до «${CITY_LEVELS[level + 1].name}»` : "максимальный уровень"}</span>
+      </div>
+      <div className="bar"><i style={{ width: (need ? into / need : 1) * 100 + "%" }} /></div>
+      <ol className="perks">
+        {CITY_LEVELS.map((l, i) => (
+          <li key={l.name} className={i <= level ? "got" : ""}>
+            <b>{l.name}</b> <span>{i <= level ? l.perk : `${l.perk} · с ${l.from} задач`}</span>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
