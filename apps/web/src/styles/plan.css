@@ -73,6 +73,15 @@ ul.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .prio-menu .prio.none { opacity: 1; color: var(--muted); border: 1px solid var(--line); }
 .prio-menu .prio[aria-checked="true"] { box-shadow: 0 0 0 2px var(--c) inset; }
 .task label { cursor: pointer; overflow-wrap: anywhere; }
+.task-rename { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; opacity: 0; transition: opacity .15s; }
+.task-rename svg { width: 14px; height: 14px; display: block; }
+.task-rename:hover { color: var(--ink); background: var(--bg); }
+.task:hover .task-rename, .task-rename:focus-visible { opacity: 1; }
+.task-rename:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+/* touch screens have no hover: keep the pencil visible */
+@media (hover: none) { .task-rename { opacity: .7; } }
+.task-edit { flex: 1 1 100%; min-width: 0; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--focus); border-radius: 6px; padding: 4px 8px; }
+.task-edit:focus { outline: 2px solid color-mix(in srgb, var(--focus) 35%, transparent); outline-offset: 0; }
 .task.is-done label { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--brick); }
 .tbtns { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .tbtn { border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; border-radius: 7px; padding: 4px 7px; display: inline-flex; align-items: center; gap: 4px; font: 500 12px/1 "Golos Text", sans-serif; }

@@ -120,6 +120,20 @@ export function moveTask(g: Goal, taskId: string, to: number): void {
   g.tasks.splice(Math.max(0, Math.min(to, g.tasks.length)), 0, t);
 }
 
+/** Longest task name; the same limit as the "new task" field. */
+export const TASK_TEXT_MAX = 140;
+
+/**
+ * Renames a task: trims, cuts to TASK_TEXT_MAX and ignores an empty name.
+ * Returns whether the text changed. Mutates.
+ */
+export function renameTask(t: Task, text: string): boolean {
+  const v = text.trim().slice(0, TASK_TEXT_MAX);
+  if (!v || v === t.text) return false;
+  t.text = v;
+  return true;
+}
+
 /** Sets a task's size; "M" is stored as no size. Mutates. */
 export function setSize(t: Task, size: TaskSize): void {
   if (size === "M") delete t.size;

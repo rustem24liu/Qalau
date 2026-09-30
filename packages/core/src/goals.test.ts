@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { freshWallet } from "./wallet";
-import { activeGoal, exampleState, markDone, moveTask, newGoal, normalize, rollDaily, setPriority, setSize, sortByPriority } from "./goals";
+import { activeGoal, exampleState, markDone, moveTask, newGoal, normalize, renameTask, rollDaily, setPriority, setSize, sortByPriority, TASK_TEXT_MAX } from "./goals";
 import type { AppState, Goal, Priority, Task, Timer } from "./types";
 
 // Tuesday, 29 Sep 2026, 10:00 local time
@@ -233,6 +233,40 @@ describe("automatic task order", () => {
     const s = stateOf(g);
     rollDaily(s);
     expect(ids(s)).toBe("u n");
+  });
+});
+
+describe("renameTask", () => {
+  const task = (): Task => ({ id: "a", text: "Старое", done: false });
+
+  it("sets the trimmed new name", () => {
+    const t = task();
+    expect(renameTask(t, "  Новое имя  ")).toBe(true);
+    expect(t.text).toBe("Новое имя");
+  });
+
+  it("keeps the old name for an empty or blank one", () => {
+    const t = task();
+    expect(renameTask(t, "")).toBe(false);
+    expect(renameTask(t, "   ")).toBe(false);
+    expect(t.text).toBe("Старое");
+  });
+
+  it("reports no change for the same name", () => {
+    const t = task();
+    expect(renameTask(t, " Старое ")).toBe(false);
+  });
+
+  it("cuts a name longer than TASK_TEXT_MAX", () => {
+    const t = task();
+    renameTask(t, "я".repeat(TASK_TEXT_MAX + 20));
+    expect(t.text).toHaveLength(TASK_TEXT_MAX);
+  });
+
+  it("works on finished tasks and keeps everything else", () => {
+    const t: Task = { id: "a", text: "Было", done: true, spent: 60_000, size: "L", priority: "high" };
+    renameTask(t, "Стало");
+    expect(t).toEqual({ id: "a", text: "Стало", done: true, spent: 60_000, size: "L", priority: "high" });
   });
 });
 

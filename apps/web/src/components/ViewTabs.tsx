@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { FEATURES } from "../features";
 import { useStore } from "../store";
 
 /** Switch between one goal's building site, the whole city and the shop; shows the coin balance. */
@@ -12,14 +13,16 @@ export function ViewTabs() {
     <div className="tabs-row">
       <div className="view-tabs" role="tablist" aria-label="Экран">
         <button type="button" role="tab" aria-selected={view === "site"} onClick={() => setView("site")}>Стройка</button>
-        <button type="button" role="tab" aria-selected={view === "city"} onClick={() => setView("city")}>
-          Город{cityName ? ` · ${cityName}` : ""}
-        </button>
-        <button type="button" role="tab" aria-selected={view === "shop"} onClick={() => setView("shop")}>Магазин</button>
+        {FEATURES.city && (
+          <button type="button" role="tab" aria-selected={view === "city"} onClick={() => setView("city")}>
+            Город{cityName ? ` · ${cityName}` : ""}
+          </button>
+        )}
+        {FEATURES.shop && <button type="button" role="tab" aria-selected={view === "shop"} onClick={() => setView("shop")}>Магазин</button>}
       </div>
-      <button type="button" className={"coins" + (bump ? " bump" : "")} onClick={() => setView("shop")} aria-label={`Монет: ${coins}. Открыть магазин`}>
+      {FEATURES.shop && <button type="button" className={"coins" + (bump ? " bump" : "")} onClick={() => setView("shop")} aria-label={`Монет: ${coins}. Открыть магазин`}>
         <span className="coin" aria-hidden="true" />{coins}
-      </button>
+      </button>}
     </div>
   );
 }

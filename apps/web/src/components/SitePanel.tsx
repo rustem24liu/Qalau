@@ -29,7 +29,7 @@ export function SitePanel({ night }: { night: boolean }) {
       <SceneView goal={goal} k={k} N={N} night={dark} workers={workers} mood={mood} neglect={neglect} />
       {rest ? <RestBox rest={rest} /> : <RestLauncher />}
       {timers.length > 0 && (
-        <div className={"timers" + (timers.length > 1 ? " multi" : "")}>
+        <div className="timers">
           {timers.map(tm => <TimerBox key={tm.taskId} timer={tm} activeGoal={goal} />)}
         </div>
       )}

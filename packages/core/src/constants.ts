@@ -16,10 +16,10 @@ export const KINDS: Record<GoalType, KindInfo> = {
 };
 
 /**
- * Max tasks in progress at once. Research on task switching says focus drops sharply
- * past 2–3 parallel tasks (Weinberg: ~20% lost per extra project; Leroy: attention residue).
+ * Max tasks in progress at once: one, so the timer is about finishing a single thing.
+ * Task switching costs focus (Weinberg: ~20% lost per extra project; Leroy: attention residue).
  */
-export const MAX_PARALLEL = 3;
+export const MAX_PARALLEL = 1;
 
 /**
  * Work / break rhythm. Pomodoro is 25/5, DeskTime's top performers ~52/17, ultradian cycles ~90 min;

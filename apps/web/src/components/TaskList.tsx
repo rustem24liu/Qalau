@@ -4,11 +4,11 @@ import {
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { fmtDur, MAX_PARALLEL, type Goal, type Task, type Timer } from "@qalau/core";
-import { useState } from "react";
+import { fmtDur, MAX_PARALLEL, TASK_TEXT_MAX, type Goal, type Task, type Timer } from "@qalau/core";
+import { useRef, useState } from "react";
 import { ensureAudio } from "../lib/audio";
 import { useStore } from "../store";
-import { ClockIcon, GripIcon, PlayIcon } from "./icons";
+import { ClockIcon, GripIcon, PencilIcon, PlayIcon } from "./icons";
 import { PriorityPicker } from "./PriorityPicker";
 import { DuePicker } from "./DuePicker";
 import { SizeToggle } from "./SizeToggle";
@@ -51,7 +51,7 @@ export function TaskList({ goal }: { goal: Goal }) {
           onStarted={() => setPickFor(null)}
         />
       ))}
-      {full && <li className="limit-note">В работе уже {MAX_PARALLEL} задачи — больше параллельно только снижает фокус. Закончите одну, чтобы начать следующую.</li>}
+      {full && <li className="limit-note">Одна задача за раз: закончите или отмените текущую, чтобы начать следующую.</li>}
     </ul>
     </SortableContext>
     </DndContext>
@@ -62,7 +62,7 @@ interface ItemProps {
   task: Task;
   /** This task's timer, if it runs. */
   timer: Timer | undefined;
-  /** MAX_PARALLEL tasks already run. */
+  /** Another task already runs (one at a time). */
   full: boolean;
   picking: boolean;
   onTogglePicker(): void;
@@ -80,7 +80,7 @@ function TaskItem({ task: t, timer, full, picking, onTogglePicker, minutes, setM
   if (t.done) side = t.spent ? <span className="spent" title="Затраченное время">{fmtDur(t.spent)}</span> : <span />;
   else if (timer) side = <span className="run-tag">{timer.mode === "up" ? "в работе" : "таймер"}</span>;
   else {
-    const dis = full ? { disabled: true, title: `Одновременно — не больше ${MAX_PARALLEL} задач` } : {};
+    const dis = full ? { disabled: true, title: "Сначала закончите текущую задачу" } : {};
     side = (
       <span className="tbtns">
         <button className="tbtn" type="button" {...dis} aria-label="Начать с секундомером" onClick={() => { onStarted(); ensureAudio(); startStopwatch(t.id); }}>
@@ -100,7 +100,7 @@ function TaskItem({ task: t, timer, full, picking, onTogglePicker, minutes, setM
       </button>
       <input type="checkbox" id={"t-" + t.id} checked={t.done} onChange={e => toggleTask(t.id, e.target.checked)} />
       <span className="task-main">
-        <label htmlFor={"t-" + t.id}>{t.text}</label>
+        <TaskName task={t} />
         {!t.done && <SizeToggle task={t} />}
         {!t.done && <PriorityPicker taskId={t.id} value={t.priority} />}
         {!t.done && <DuePicker due={t.due} of="задачи" onChange={d => useStore.getState().setTaskDue(t.id, d)} />}
@@ -109,6 +109,49 @@ function TaskItem({ task: t, timer, full, picking, onTogglePicker, minutes, setM
       <button className="del" type="button" aria-label="Удалить задачу" onClick={() => removeTask(t.id)}>×</button>
       {picking && <TimerPicker taskId={t.id} minutes={minutes} setMinutes={setMinutes} onStarted={onStarted} />}
     </li>
+  );
+}
+
+/** Task name with a pencil button; Enter or leaving the field saves, Esc cancels. */
+function TaskName({ task: t }: { task: Task }) {
+  const renameTask = useStore(s => s.renameTask);
+  const [editing, setEditing] = useState(false);
+  const editBtn = useRef<HTMLButtonElement>(null);
+
+  const finish = (save: boolean, text: string) => {
+    if (save) renameTask(t.id, text);
+    setEditing(false);
+    requestAnimationFrame(() => editBtn.current?.focus());
+  };
+
+  if (editing) {
+    return (
+      <input
+        className="task-edit"
+        aria-label="Название задачи"
+        defaultValue={t.text}
+        maxLength={TASK_TEXT_MAX}
+        autoFocus
+        onFocus={e => e.currentTarget.select()}
+        onKeyDown={e => {
+          if (e.key === "Enter") { e.preventDefault(); finish(true, e.currentTarget.value); }
+          else if (e.key === "Escape") {
+            // restore the old name, so a blur that may follow saves nothing
+            e.currentTarget.value = t.text;
+            finish(false, "");
+          }
+        }}
+        onBlur={e => finish(true, e.currentTarget.value)}
+      />
+    );
+  }
+  return (
+    <>
+      <label htmlFor={"t-" + t.id}>{t.text}</label>
+      <button ref={editBtn} type="button" className="task-rename" aria-label={`Переименовать «${t.text}»`} title="Переименовать" onClick={() => setEditing(true)}>
+        <PencilIcon />
+      </button>
+    </>
   );
 }
 

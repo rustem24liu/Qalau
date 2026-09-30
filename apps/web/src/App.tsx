@@ -11,6 +11,7 @@ import { useTimerTick } from "./hooks/useTimerTick";
 import { useWeatherSync } from "./hooks/useWeatherSync";
 import { useEffect } from "react";
 import { scene } from "./lib/scene";
+import { FEATURES, hasViews } from "./features";
 import { useStore } from "./store";
 
 export function App() {
@@ -20,15 +21,16 @@ export function App() {
   useWeatherSync();
   const view = useStore(s => s.view);
   const roof = useStore(s => s.state.wallet.roof);
-  useEffect(() => scene.setRoof(roof), [roof]);
+  // a roof color bought in the shop only applies while the shop is on
+  useEffect(() => scene.setRoof(FEATURES.shop ? roof : null), [roof]);
 
   return (
     <div className="wrap">
       <Header night={night} onToggleTheme={toggle} />
-      <ViewTabs />
-      {view === "city" ? (
+      {hasViews && <ViewTabs />}
+      {view === "city" && FEATURES.city ? (
         <CityPanel night={night} />
-      ) : view === "shop" ? (
+      ) : view === "shop" && FEATURES.shop ? (
         <ShopPanel />
       ) : (
         <>

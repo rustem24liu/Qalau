@@ -1,8 +1,9 @@
 import {
-  activeGoal, buy, CITY_LEVELS, cityLevel, cityPoints, earn, elapsed, focusCoins, logEvent, payLevels, REWARD, setRoof, touchGoal, type BuyResult, type RoofId, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, setDue, setPriority, setSize, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
+  activeGoal, buy, CITY_LEVELS, cityLevel, cityPoints, earn, elapsed, focusCoins, logEvent, payLevels, REWARD, setRoof, touchGoal, type BuyResult, type RoofId, endRest, extendRest, fmtDur, MAX_PARALLEL, resumeTask, snoozeRest, wake, startRest, syncWork, loadState, makeCity, markDone, moveTask, renameTask, setDue, setPriority, setSize, newGoal, newTask, normalize, rollDaily, saveState, today, togglePause,
   type AppState, type Goal, type GoalType, type Priority, type TaskSize, type Timer,
 } from "@qalau/core";
 import { create } from "zustand";
+import { FEATURES } from "./features";
 import { chime } from "./lib/audio";
 
 interface Store {
@@ -45,6 +46,8 @@ interface Store {
   /** Reorders tasks of the active goal: put `id` at position `to` (within its priority group — normalize re-sorts). */
   moveTask(id: string, to: number): void;
   setPriority(id: string, p: Priority | null): void;
+  /** Renames a task of the active goal; an empty name is ignored. */
+  renameTask(id: string, text: string): void;
   setSize(id: string, size: TaskSize): void;
   /** Deadline of a task of the active goal (null clears it). */
   setTaskDue(id: string, due: string | null): void;
@@ -100,7 +103,7 @@ export const useStore = create<Store>()((set, get) => ({
     saveState(next);
     set({ state: next, now: Date.now() });
     // the city reached a new level
-    if (is > was && !prev.example) get().showToast(`Город вырос: теперь это ${CITY_LEVELS[is].name}! Открыто: ${CITY_LEVELS[is].perk.toLowerCase()} · +${REWARD.level} монет`);
+    if (FEATURES.city && is > was && !prev.example) get().showToast(`Город вырос: теперь это ${CITY_LEVELS[is].name}! Открыто: ${CITY_LEVELS[is].perk.toLowerCase()} · +${REWARD.level} монет`);
   },
 
   rollDay() {
@@ -178,6 +181,16 @@ export const useStore = create<Store>()((set, get) => ({
     const t = g.tasks.find(x => x.id === id);
     if (t) setPriority(t, p);
   })),
+
+  renameTask(id, text) {
+    // don't save (and drop the example flag) when nothing actually changes
+    const t = activeGoal(get().state).tasks.find(x => x.id === id);
+    if (!t || !renameTask({ ...t }, text)) return;
+    get().update(withActive(g => {
+      const x = g.tasks.find(y => y.id === id);
+      if (x) renameTask(x, text);
+    }));
+  },
 
   setSize: (id, size) => get().update(withActive(g => {
     const t = g.tasks.find(x => x.id === id);

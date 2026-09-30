@@ -77,7 +77,7 @@ export interface AppState {
   activeId?: string;
   /** True until the user changes anything in the example data. */
   example?: boolean;
-  /** Running tasks, at most MAX_PARALLEL, across all goals. */
+  /** Running task (at most MAX_PARALLEL, i.e. one), across all goals. */
   timers: Timer[];
   work: WorkLog;
   rest?: Rest | null;

@@ -1,8 +1,10 @@
 import { backupFileName, exportBackup, parseBackup, type AppState } from "@qalau/core";
 import { useRef, useState } from "react";
+import { FEATURES } from "../features";
 import { useStore } from "../store";
 
-const summary = (s: AppState) => `${s.goals.length} ${plural(s.goals.length, "цель", "цели", "целей")}, ${s.wallet.coins} монет`;
+const summary = (s: AppState) =>
+  `${s.goals.length} ${plural(s.goals.length, "цель", "цели", "целей")}` + (FEATURES.shop ? `, ${s.wallet.coins} монет` : "");
 const plural = (n: number, one: string, few: string, many: string) =>
   n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many;
 

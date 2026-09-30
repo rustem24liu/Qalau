@@ -62,3 +62,9 @@ export const CalendarIcon = () => (
     <path d="M3.5 10h17M8 3v4M16 3v4" />
   </svg>
 );
+
+export const PencilIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" />
+  </svg>
+);

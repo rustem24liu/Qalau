@@ -1,8 +1,6 @@
 import { FINAL_STAGE, runningTimers, STAGES, type Goal, type Timer } from "@qalau/core";
 import { scene } from "../lib/scene";
 
-const CREW = ["", "Строим: ", "Строим вдвоём: ", "Строим втроём: "];
-
 interface Props {
   goal: Goal;
   k: number;
@@ -20,7 +18,7 @@ export function ProgressMeter({ goal: g, k, N, timers }: Props) {
 
   const title = finished
     ? g.type === "daily" ? "Хижина готова на сегодня" : "Построено! С новосельем"
-    : (here.length ? (crew ? CREW[Math.min(crew, 3)] : "Стройка на паузе · ") : "Этап: ") + STAGES[cur];
+    : (here.length ? (crew ? "Строим: " : "Стройка на паузе · ") : "Этап: ") + STAGES[cur];
 
   return (
     <>
