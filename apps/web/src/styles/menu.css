@@ -16,6 +16,7 @@
   display: grid; gap: 16px;
   animation: menu-pop .2s ease;
 }
+.menu-panel.wide { width: min(760px, 100%); }
 .menu-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .menu-head h2 { margin: 0; font: 700 18px/1.2 "Unbounded", sans-serif; }
 .menu-close { display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--bg); color: var(--muted); cursor: pointer; }

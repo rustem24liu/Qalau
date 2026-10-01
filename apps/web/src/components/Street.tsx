@@ -3,8 +3,8 @@ import { useState } from "react";
 import { scene } from "../lib/scene";
 import { useActiveGoal, useStore } from "../store";
 
-/** Horizontal list of goals with thumbnails, plus the "new goal" chooser. */
-export function Street({ night }: { night: boolean }) {
+/** Grid of goals with thumbnails, plus the "new goal" chooser. `onPick` runs after a goal is opened or created. */
+export function Street({ night, onPick }: { night: boolean; onPick(): void }) {
   const goals = useStore(s => s.state.goals);
   const active = useActiveGoal();
   const selectGoal = useStore(s => s.selectGoal);
@@ -14,6 +14,7 @@ export function Street({ night }: { night: boolean }) {
   const create = (type: GoalType) => {
     setChoosing(false);
     addGoal(type);
+    onPick();
     requestAnimationFrame(() => {
       const t = document.getElementById("goal-title") as HTMLInputElement | null;
       t?.focus();
@@ -24,7 +25,7 @@ export function Street({ night }: { night: boolean }) {
   return (
     <nav className="street" aria-label="Ваши цели">
       {goals.map(g => (
-        <Lot key={g.id} goal={g} night={night} pressed={g.id === active.id} onClick={() => selectGoal(g.id)} />
+        <Lot key={g.id} goal={g} night={night} pressed={g.id === active.id} onClick={() => { selectGoal(g.id); onPick(); }} />
       ))}
       {choosing ? (
         <div className="chooser">

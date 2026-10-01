@@ -1,9 +1,10 @@
 import { DAY_PHASES, PHASE_LABEL, WEATHER_KINDS, WEATHER_LABEL } from "@qalau/core";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useWeatherView } from "../hooks/useWeatherSync";
 import { useWeather } from "../lib/weather";
 import { DataSettings } from "./DataSettings";
-import { CloseIcon, MenuIcon } from "./icons";
+import { Dialog } from "./Dialog";
+import { MenuIcon } from "./icons";
 import { LocateButton, weatherText } from "./Weather";
 
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -12,20 +13,11 @@ const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
-  const closeBtn = useRef<HTMLButtonElement>(null);
 
-  const close = () => {
+  const close = useCallback(() => {
     setOpen(false);
     btn.current?.focus();
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    closeBtn.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, []);
 
   return (
     <>
@@ -41,18 +33,10 @@ export function SettingsMenu() {
         <MenuIcon />
       </button>
       {open && (
-        <div className="menu-backdrop" onClick={e => { if (e.target === e.currentTarget) close(); }}>
-          <div className="menu-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-            <div className="menu-head">
-              <h2 id="settings-title">Настройки</h2>
-              <button ref={closeBtn} type="button" className="menu-close" aria-label="Закрыть" onClick={close}>
-                <CloseIcon />
-              </button>
-            </div>
-            <WeatherSettings />
-            <DataSettings />
-          </div>
-        </div>
+        <Dialog title="Настройки" onClose={close}>
+          <WeatherSettings />
+          <DataSettings />
+        </Dialog>
       )}
     </>
   );

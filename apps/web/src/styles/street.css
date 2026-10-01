@@ -1,6 +1,6 @@
-/* Goal list ("street" of houses) */
-.street { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
-.lot { flex: 0 0 auto; width: 140px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: left; color: var(--ink); font: inherit; display: grid; gap: 4px; align-content: start; }
+/* Goal list ("street" of houses), shown in the "Мои цели" dialog */
+.street { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.lot { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 6px 6px 10px; cursor: pointer; text-align: left; color: var(--ink); font: inherit; display: grid; gap: 4px; align-content: start; }
 .lot[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
 .lot .th { aspect-ratio: 4/3; border-radius: 8px; background: linear-gradient(180deg, var(--sky1), var(--sky2)); overflow: hidden; display: block; }
 .lot .th > span { display: block; width: 100%; height: 100%; }
@@ -10,10 +10,19 @@
 .lot.new { border-style: dashed; display: grid; place-items: center; min-height: 160px; color: var(--muted); font-weight: 600; text-align: center; align-content: center; }
 .lot.new span { font-size: 26px; line-height: 1; }
 
-.chooser { flex: 0 0 auto; width: 200px; border: 1px dashed var(--accent); background: var(--panel); border-radius: 12px; padding: 10px; display: grid; gap: 6px; align-content: start; }
+.chooser { grid-column: span 2; border: 1px dashed var(--accent); background: var(--panel); border-radius: 12px; padding: 10px; display: grid; gap: 6px; align-content: start; }
 .chooser .lbl { margin-bottom: 2px; }
 .chooser button { display: grid; gap: 1px; text-align: left; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 7px 10px; cursor: pointer; font: inherit; }
 .chooser button b { font-size: 13px; }
 .chooser button small { font-size: 11.5px; color: var(--muted); }
 .chooser button:hover { border-color: var(--accent); }
 .chooser .x { background: transparent; border: 0; color: var(--muted); font-size: 12.5px; text-align: center; padding: 4px; }
+
+/* header button that opens the goals */
+.goals-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 7px 10px 7px 8px; font: 600 13px/1 "Golos Text", sans-serif; cursor: pointer; }
+.goals-btn .ic { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--brick); color: #fff; }
+.goals-btn svg { width: 15px; height: 15px; display: block; }
+.goals-btn .n { min-width: 20px; padding: 3px 6px; border-radius: 99px; background: var(--bg); color: var(--muted); font: 600 11.5px/1 "JetBrains Mono", monospace; text-align: center; }
+.goals-btn:hover { border-color: var(--muted); }
+.goals-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 420px) { .chooser { grid-column: 1 / -1; } }

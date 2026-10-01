@@ -1,3 +1,4 @@
+import { GoalsMenu } from "./GoalsMenu";
 import { MoonIcon, SunIcon } from "./icons";
 import { SettingsMenu } from "./SettingsMenu";
 
@@ -18,6 +19,7 @@ export function Header({ night, onToggleTheme }: Props) {
         </div>
         <div className="head-r">
           <span className="sync">сохранение в браузере</span>
+          <GoalsMenu night={night} />
           <button
             className="theme-btn"
             type="button"

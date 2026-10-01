@@ -68,3 +68,9 @@ export const PencilIcon = () => (
     <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4" />
   </svg>
 );
+
+export const HouseIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 11l8-6.5 8 6.5M6 9.5V20h12V9.5M10 20v-5h4v5" />
+  </svg>
+);

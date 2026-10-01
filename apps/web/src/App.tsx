@@ -3,7 +3,6 @@ import { Header } from "./components/Header";
 import { PlanPanel } from "./components/PlanPanel";
 import { ShopPanel } from "./components/ShopPanel";
 import { SitePanel } from "./components/SitePanel";
-import { Street } from "./components/Street";
 import { ViewTabs } from "./components/ViewTabs";
 import { useDailyRollover } from "./hooks/useDailyRollover";
 import { useTheme } from "./hooks/useTheme";
@@ -33,13 +32,10 @@ export function App() {
       ) : view === "shop" && FEATURES.shop ? (
         <ShopPanel />
       ) : (
-        <>
-          <Street night={night} />
-          <section className="main">
-            <SitePanel night={night} />
-            <PlanPanel />
-          </section>
-        </>
+        <section className="main">
+          <SitePanel night={night} />
+          <PlanPanel />
+        </section>
       )}
     </div>
   );
